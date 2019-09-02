@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "typescript": "^3.6.2"
+  },
+  "scripts": {
+    "dev": "tsc  --project tsconfig.json -w"
+  }
+}
