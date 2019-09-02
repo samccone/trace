@@ -11,11 +11,11 @@ export class Timeline {
            y: 100,
            width: 50,
            height: 20,
-           fill: 'teal',
+           fill: 'black',
            text: {
                offsetX: 0,
                offsetY: 0,
-               fill: 'red',
+               fill: 'white',
                text: 'hello world'
            }
        }]); 

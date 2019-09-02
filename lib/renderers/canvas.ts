@@ -3,14 +3,19 @@ import { Renderer, RenderOp } from './renderer';
 export class CanvasRenderer implements Renderer {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    private displayDensity: number;
 
     constructor(public readonly dimensions: { width: number; height: number }, public readonly target: Element) {
+        this.displayDensity = window.devicePixelRatio;
         this.canvas = document.createElement('canvas');
-        this.canvas.width = dimensions.width;
-        this.canvas.height = dimensions.height;
+        this.canvas.width = dimensions.width * this.displayDensity;
+        this.canvas.height = dimensions.height * this.displayDensity;
+        this.canvas.style.width = `${dimensions.width}px`;
+        this.canvas.style.height = `${dimensions.height}px`;
 
         this.ctx = this.canvas.getContext('2d')!;
         this.ctx.textBaseline = 'top';
+        this.ctx.scale(this.displayDensity, this.displayDensity);
         this.target.appendChild(this.canvas);
     }
 
