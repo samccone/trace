@@ -1,5 +1,5 @@
-import {CanvasRenderer} from '../lib/renderers/canvas.js';
-import {Timeline} from '../lib/timeline.js';
+import {CanvasRenderer} from '../lib/renderers/canvas';
+import {Timeline} from '../lib/timeline';
 
 const elm = document.createElement('div');
 

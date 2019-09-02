@@ -4,9 +4,10 @@
     "typescript": "^3.6.2"
   },
   "scripts": {
-    "dev": "tsc  --project tsconfig.json -w"
+    "dev": "parcel demo/index.html"
   },
   "devDependencies": {
-    "@types/d3-scale": "2.1.1"
+    "@types/d3-scale": "2.1.1",
+    "parcel-bundler": "^1.12.3"
   }
 }

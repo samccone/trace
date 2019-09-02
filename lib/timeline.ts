@@ -3,7 +3,7 @@ import { TimelineEvents } from "./format";
 import {
   scaleLinear,
   scaleBand,
-} from "../node_modules/d3-scale/dist/d3-scale.js";
+} from "d3-scale";
 
 export class Timeline {
   constructor(

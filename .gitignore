@@ -1,4 +1,7 @@
 *.js
 *.js.map
+.cache/
+*.tsbuildinfo
+dist/*
 tsconfig.tsbuildinfo
 node_modules/
