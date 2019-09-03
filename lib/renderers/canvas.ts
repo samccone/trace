@@ -17,6 +17,7 @@ export class CanvasRenderer implements Renderer {
     this.canvas.style.height = `${dimensions.height}px`;
 
     this.ctx = this.canvas.getContext("2d")!;
+    this.ctx.font = 'normal normal 8px monospace'
     this.ctx.textBaseline = "top";
     this.ctx.scale(this.displayDensity, this.displayDensity);
     this.target.appendChild(this.canvas);
@@ -34,9 +35,9 @@ export class CanvasRenderer implements Renderer {
         const fontSize = parseInt(this.ctx.font);
 
         this.ctx.fillText(
-          opt.text.text,
-          opt.x + (opt.text.offsetX || fontSize / 2),
-          opt.y + (opt.text.offsetY || opt.height / 2 - fontSize / 2)
+          opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
+          opt.x + (opt.text.offsetX || 0),
+          opt.y + (opt.text.offsetY || opt.height / 2 - fontSize / 2),
         );
       }
     }
