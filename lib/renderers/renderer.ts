@@ -17,5 +17,5 @@ export abstract class Renderer {
    constructor(public readonly dimensions: {width: number; height: number}, public readonly target: Element) {
    }
 
-   abstract render(opts: RenderOp[]): void;
+   abstract render(opts: {opts: RenderOp[], xMax: number, yMax: number}): void;
 }

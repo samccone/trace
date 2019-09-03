@@ -47,7 +47,7 @@ export class Timeline {
       return rows.indexOf(value + "") * (20 * (1 + PADDING));
     };
 
-    return data.reduce(
+    const opts = data.reduce(
       (p, d) => {
         const width = x(d.end) - x(d.start);
 
@@ -77,9 +77,16 @@ export class Timeline {
       },
       [] as RenderOp[]
     );
+
+    return {
+        opts,
+        xMax: this.renderer.dimensions.width,
+        yMax: rows.length * (20 * 1 + PADDING) 
+    };
   }
 
   render() {
-    this.renderer.render(this.transformData(this.data));
+    const renderData = this.transformData(this.data) 
+    this.renderer.render(renderData);
   }
 }
