@@ -45,7 +45,7 @@ export class Timeline {
 
     const x = scaleLinear()
       .domain([xMin || 0,( xMin || 0) + ( median.end - median.start)])
-      .range([0, 150]);
+      .range([0, 100]);
 
     const PADDING = 0.3;
     const BANDWIDTH = 20;
@@ -72,12 +72,33 @@ export class Timeline {
           maxX = localX + width;
         }
 
+        let fillColor = '#ccc';
+        if (d.label.indexOf('git remote -v') != -1) {
+          fillColor = 'teal';
+        }
+
+        if (d.label.indexOf('git log') != -1) {
+          fillColor = 'yellow';
+        }
+
+        if (d.label.indexOf('git config') != -1) {
+          fillColor = 'red';
+        }
+
+        if (d.label.indexOf('git clean') != -1) {
+          fillColor = 'purple';
+        }
+
+        if (d.label.indexOf('git status') != -1) {
+          fillColor = 'pink';
+        }
+
         const value = {
           x: localX,
           y: y(d.rowId) || 0,
           width,
           height: BANDWIDTH,
-          fill: "#ccc",
+          fill: fillColor,
           text: {
             offsetX: 0,
             offsetY: 0,

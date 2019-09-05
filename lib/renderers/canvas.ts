@@ -37,7 +37,8 @@ export class CanvasRenderer implements Renderer {
     this.ctx = this.canvas.getContext("2d")!;
     this.ctx.font = 'normal normal 8px monospace'
     this.ctx.textBaseline = "top";
-    this.ctx.scale(this.displayDensity, this.displayDensity);
+    this.ctx.scale(0.15, 0.15);
+    //this.ctx.scale(this.displayDensity, this.displayDensity);
     this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
     this.target.appendChild(this.wrapper);
@@ -58,8 +59,9 @@ export class CanvasRenderer implements Renderer {
       }
   }
 
-  render(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
+  private internalRender(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
     this.lastOps = instructions;
+
     this.overflowElm.style.width = `${instructions.xMax}px`;
     this.overflowElm.style.height = `${instructions.yMax}px`;
 
@@ -81,5 +83,9 @@ export class CanvasRenderer implements Renderer {
         );
       }
     }
+  }
+
+  render(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
+    requestAnimationFrame(() => this.internalRender(instructions));
   }
 }
