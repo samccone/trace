@@ -1,6 +1,6 @@
 import { Renderer, RenderOp } from "./renderers/renderer";
 import { TimelineEvents } from "./format";
-import { scaleLinear, scaleBand } from "d3-scale";
+import { scaleLinear } from "d3-scale";
 
 export class Timeline {
   constructor(
@@ -36,9 +36,16 @@ export class Timeline {
       }
     });
 
+    const sortedData = data.sort((a,b) => {
+      return (a.end - a.start) - (b.end - b.start);
+    })
+
+    const medianIndex = Math.floor(sortedData.length/2)
+    const median = sortedData[medianIndex]
+
     const x = scaleLinear()
-      .domain([xMin || 0, xMax || 0])
-      .range([0, this.renderer.dimensions.width]);
+      .domain([xMin || 0,( xMin || 0) + ( median.end - median.start)])
+      .range([0, 150]);
 
     const PADDING = 0.3;
     const BANDWIDTH = 20;
@@ -46,6 +53,9 @@ export class Timeline {
     const y = (value: string | number) => {
       return rows.indexOf(value + "") * (20 * (1 + PADDING));
     };
+
+
+    let maxX: number = -Infinity;
 
     const opts = data.reduce(
       (p, d) => {
@@ -57,8 +67,13 @@ export class Timeline {
           return p;
         }
 
+        const localX = x(d.start);
+        if (localX + width > maxX) {
+          maxX = localX + width;
+        }
+
         const value = {
-          x: x(d.start),
+          x: localX,
           y: y(d.rowId) || 0,
           width,
           height: BANDWIDTH,
@@ -80,8 +95,8 @@ export class Timeline {
 
     return {
         opts,
-        xMax: this.renderer.dimensions.width,
-        yMax: rows.length * (20 * 1 + PADDING) 
+        xMax: maxX,
+        yMax: rows.length * (20 * (1 + PADDING)) 
     };
   }
 
