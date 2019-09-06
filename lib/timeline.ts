@@ -1,11 +1,14 @@
 import { Renderer, RenderOp } from "./renderers/renderer";
-import { TimelineEvents } from "./format";
+import { TimelineEvents, TimelineEvent } from "./format";
 import { scaleLinear } from "d3-scale";
 
 export class Timeline {
   constructor(
     public readonly renderer: Renderer,
-    public readonly data: TimelineEvents
+    public readonly data: TimelineEvents,
+    private readonly opts: {
+      toFill?: (t: TimelineEvent) => string;
+    } = {},
   ) {}
 
   transformData(data: TimelineEvents) {
@@ -72,26 +75,7 @@ export class Timeline {
           maxX = localX + width;
         }
 
-        let fillColor = '#ccc';
-        if (d.label.indexOf('git remote -v') != -1) {
-          fillColor = 'teal';
-        }
-
-        if (d.label.indexOf('git log') != -1) {
-          fillColor = 'yellow';
-        }
-
-        if (d.label.indexOf('git config') != -1) {
-          fillColor = 'red';
-        }
-
-        if (d.label.indexOf('git clean') != -1) {
-          fillColor = 'purple';
-        }
-
-        if (d.label.indexOf('git status') != -1) {
-          fillColor = 'pink';
-        }
+        let fillColor = this.opts.toFill ? this.opts.toFill(d) : '#ccc';
 
         const value = {
           x: localX,

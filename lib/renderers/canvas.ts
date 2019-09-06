@@ -37,8 +37,7 @@ export class CanvasRenderer implements Renderer {
     this.ctx = this.canvas.getContext("2d")!;
     this.ctx.font = 'normal normal 8px monospace'
     this.ctx.textBaseline = "top";
-    this.ctx.scale(0.15, 0.15);
-    //this.ctx.scale(this.displayDensity, this.displayDensity);
+    this.ctx.scale(this.displayDensity, this.displayDensity);
     this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
     this.target.appendChild(this.wrapper);
