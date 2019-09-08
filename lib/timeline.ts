@@ -14,15 +14,17 @@ export class Timeline {
   }
 
   private setListeners() {
-    window.addEventListener("keypress", e => {
-      if (e.key === "k") {
-        this.renderer.zoomIn();
-      }
+    window.addEventListener('wheel', (e: WheelEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        if (e.deltaY != null && e.deltaY < 0) {
+          this.renderer.zoomIn();
+        } else {
+          this.renderer.zoomOut();
+        }
 
-      if (e.key === "j") {
-        this.renderer.zoomOut();
+        e.preventDefault();
       }
-    });
+    }, {passive: false});
   }
 
   transformData(data: TimelineEvents) {
@@ -126,7 +128,7 @@ export class Timeline {
     const BUCKETS = 100;
     const increment = totalDuration / BUCKETS;
 
-    const xSummary = [...new Array(BUCKETS)].map((n, bucket) => {
+    const xSummary = [...new Array(BUCKETS)].map((_, bucket) => {
       let totalForColumn = 0;
 
       Object.keys(rowMap).forEach(row => {

@@ -10,6 +10,9 @@ interface RenderInstructions {
   xSummary: SummaryEvent[];
 }
 
+const ZOOM_AMOUNT = 0.1;
+const MIN_ZOOM = 0.1;
+
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -141,11 +144,11 @@ export class CanvasRenderer implements Renderer {
   }
 
   private xScale() {
-    return this.displayDensity + Math.max(0, this.zoomLevel);
+    return this.displayDensity + this.zoomLevel;
   }
 
   private yScale() {
-    return this.displayDensity + Math.max(0, this.zoomLevel);
+    return this.displayDensity + this.zoomLevel;
   }
 
   private internalRender(instructions: RenderInstructions) {
@@ -224,19 +227,25 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  private zoom(changeAmount: number) {
+  private zoom(changeAmount: number): void {
+    const originalZoomLevel = this.zoomLevel;
     this.zoomLevel += changeAmount;
-    if (this.lastOps) {
-      this.render(this.lastOps);
+    if (this.xScale() <= MIN_ZOOM || this.yScale() <= MIN_ZOOM) {
+      this.zoomLevel = originalZoomLevel;
+      return this.zoom(changeAmount / 2);
+    } else {
+      if (this.lastOps) {
+        this.render(this.lastOps)
+      }
     }
   }
 
   zoomIn() {
-    this.zoom(0.1);
+    this.zoom(ZOOM_AMOUNT);
   }
 
   zoomOut() {
-    this.zoom(-0.1);
+    this.zoom(-ZOOM_AMOUNT);
   }
 
   render(instructions: RenderInstructions) {
