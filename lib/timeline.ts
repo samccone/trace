@@ -30,7 +30,7 @@ export class Timeline {
     let xMax: number | undefined;
     let facets: string[] = [];
     let rows: string[] = [];
-    let rowMap = {};
+    let rowMap: { [idx: string]: TimelineEvent[] } = {};
 
     data.forEach(d => {
       if (!xMin || d.start < xMin) {
@@ -49,10 +49,11 @@ export class Timeline {
       const r = rows.indexOf(d.rowId + "");
       d.row = r;
 
-      if (!rowMap[r]) {
-        rowMap[r] = [];
+      const stringR = r + "";
+      if (!rowMap[stringR]) {
+        rowMap[stringR] = [];
       }
-      rowMap[r].push(d);
+      rowMap[stringR].push(d);
 
       if (
         d.facet &&
@@ -149,7 +150,6 @@ export class Timeline {
       };
     });
 
-    console.log(xSummary);
     return {
       opts,
       xMax: xUnit(xMax || 0),

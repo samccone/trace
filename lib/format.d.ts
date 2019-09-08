@@ -16,3 +16,8 @@ export interface TimelineEvent {
 }
 
 export type TimelineEvents = TimelineEvent[];
+
+export interface SummaryEvent {
+  index: number;
+  pct: number;
+}

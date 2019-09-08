@@ -1,5 +1,14 @@
 import { RenderOp, Renderer } from "./renderer";
+import { SummaryEvent } from "../format";
 import { scaleLinear } from "d3-scale";
+
+interface RenderInstructions {
+  opts: RenderOp[];
+  xMax: number;
+  yMax: number;
+  ySummary: SummaryEvent[];
+  xSummary: SummaryEvent[];
+}
 
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
@@ -15,7 +24,7 @@ export class CanvasRenderer implements Renderer {
   private marginWrapper: HTMLElement;
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
-  private lastOps?: { opts: RenderOp[]; xMax: number; yMax: number };
+  private lastOps?: RenderInstructions;
   private zoomLevel: number = 0;
   private margin: { top: number; left: number };
 
@@ -66,12 +75,14 @@ export class CanvasRenderer implements Renderer {
     this.ySummary = document.createElement("canvas");
     this.ySummary.className = "ySummary";
     this.ySummary.style.position = "fixed";
-    this.ySummary.style.top = `${margin.top}px`;
-    this.ySummary.width = (margin.left / 2) * this.displayDensity;
+    this.ySummary.style.top = `${this.margin.top}px`;
+    this.ySummary.width = (this.margin.left / 2) * this.displayDensity;
     this.ySummary.height =
-      (dimensions.height - margin.top - 20) * this.displayDensity;
-    this.ySummary.style.width = `${margin.left / 2}px`;
-    this.ySummary.style.height = `${dimensions.height - margin.top - 20}px`;
+      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+    this.ySummary.style.width = `${this.margin.left / 2}px`;
+    this.ySummary.style.height = `${dimensions.height -
+      this.margin.top -
+      20}px`;
     this.ySummary.style.border = `1px solid #cccccc`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
@@ -81,12 +92,12 @@ export class CanvasRenderer implements Renderer {
     this.xSummary = document.createElement("canvas");
     this.xSummary.className = "xSummary";
     this.xSummary.style.position = "fixed";
-    this.xSummary.style.left = `${margin.left}px`;
+    this.xSummary.style.left = `${this.margin.left}px`;
     this.xSummary.width =
-      (dimensions.width - margin.left - 20) * this.displayDensity;
-    this.xSummary.height = (margin.top / 2) * this.displayDensity;
-    this.xSummary.style.width = `${dimensions.width - margin.left - 20}px`;
-    this.xSummary.style.height = `${margin.top / 2}px`;
+      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+    this.xSummary.height = (this.margin.top / 2) * this.displayDensity;
+    this.xSummary.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xSummary.style.height = `${this.margin.top / 2}px`;
     this.xSummary.style.border = `1px solid #cccccc`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
@@ -137,13 +148,7 @@ export class CanvasRenderer implements Renderer {
     return this.displayDensity + Math.max(0, this.zoomLevel);
   }
 
-  private internalRender(instructions: {
-    opts: RenderOp[];
-    xMax: number;
-    yMax: number;
-    ySummary: [];
-    xSummary: [];
-  }) {
+  private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.ctx.resetTransform();
     this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
@@ -234,7 +239,7 @@ export class CanvasRenderer implements Renderer {
     this.zoom(-0.1);
   }
 
-  render(instructions: { opts: RenderOp[]; xMax: number; yMax: number }) {
+  render(instructions: RenderInstructions) {
     requestAnimationFrame(() => this.internalRender(instructions));
   }
 }
