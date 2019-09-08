@@ -36,7 +36,7 @@ const timeline = new Timeline(
         return "#69CDB9";
       }
       return "#ffd700";
-    },
+    }
   }
 );
 

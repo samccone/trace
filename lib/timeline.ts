@@ -14,17 +14,21 @@ export class Timeline {
   }
 
   private setListeners() {
-    window.addEventListener('wheel', (e: WheelEvent) => {
-      if (e.metaKey || e.ctrlKey) {
-        if (e.deltaY != null && e.deltaY < 0) {
-          this.renderer.zoomIn();
-        } else {
-          this.renderer.zoomOut();
-        }
+    window.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (e.metaKey || e.ctrlKey) {
+          if (e.deltaY != null && e.deltaY < 0) {
+            this.renderer.zoomIn();
+          } else {
+            this.renderer.zoomOut();
+          }
 
-        e.preventDefault();
-      }
-    }, {passive: false});
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
   }
 
   transformData(data: TimelineEvents) {
@@ -103,8 +107,8 @@ export class Timeline {
             offsetX: 0,
             offsetY: 0,
             fill: "black",
-            text: d.label,
-          },
+            text: d.label
+          }
         };
 
         p.push(value);
@@ -121,7 +125,7 @@ export class Timeline {
       rowMap[d] = rowMap[d].sort((a, b) => a.start - b.start);
       return {
         index: parseInt(d),
-        pct: totalForRow / totalDuration,
+        pct: totalForRow / totalDuration
       };
     });
 
@@ -148,7 +152,7 @@ export class Timeline {
       const totalX = rows.length;
       return {
         index: bucket,
-        pct: totalForColumn / totalX,
+        pct: totalForColumn / totalX
       };
     });
 
@@ -157,7 +161,7 @@ export class Timeline {
       xMax: xUnit(xMax || 0),
       yMax: yUnit(rows.length),
       xSummary,
-      ySummary,
+      ySummary
     };
   }
 
