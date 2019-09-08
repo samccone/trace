@@ -8,14 +8,13 @@ export class Timeline {
     public readonly data: TimelineEvents,
     private readonly opts: {
       toFill?: (t: TimelineEvent) => string;
-    } = {},
+    } = {}
   ) {
-
     this.setListeners();
   }
 
   private setListeners() {
-    window.addEventListener('keypress', (e) => {
+    window.addEventListener("keypress", e => {
       if (e.key === "k") {
         this.renderer.zoomIn();
       }
@@ -27,10 +26,11 @@ export class Timeline {
   }
 
   transformData(data: TimelineEvents) {
-    let xMin: number | undefined;
+    let xMin: number | undefined = Infinity;
     let xMax: number | undefined;
     let facets: string[] = [];
     let rows: string[] = [];
+    let rowMap = {};
 
     data.forEach(d => {
       if (!xMin || d.start < xMin) {
@@ -41,9 +41,18 @@ export class Timeline {
         xMax = d.end;
       }
 
+      d.duration = d.end - d.start;
+
       if (rows.indexOf(d.rowId + "") === -1) {
         rows.push(d.rowId + "");
       }
+      const r = rows.indexOf(d.rowId + "");
+      d.row = r;
+
+      if (!rowMap[r]) {
+        rowMap[r] = [];
+      }
+      rowMap[r].push(d);
 
       if (
         d.facet &&
@@ -54,49 +63,38 @@ export class Timeline {
       }
     });
 
-    const sortedData = data.sort((a,b) => {
-      return (a.end - a.start) - (b.end - b.start);
-    })
+    const sortedData = data.sort((a, b) => {
+      return a.end - a.start - (b.end - b.start);
+    });
 
-    const medianIndex = Math.floor(sortedData.length/2)
-    const median = sortedData[medianIndex]
+    const medianIndex = Math.floor(sortedData.length / 2);
+    const median = sortedData[medianIndex];
 
-    const x = scaleLinear()
-      .domain([xMin || 0,( xMin || 0) + ( median.end - median.start)])
+    const xUnit = scaleLinear()
+      .domain([xMin || 0, (xMin || 0) + (median.end - median.start)])
       .range([0, 100]);
 
     const PADDING = 0.3;
-    const BANDWIDTH = 20;
+    const BANDHEIGHT = 20;
 
-    const y = (value: string | number) => {
-      return rows.indexOf(value + "") * (20 * (1 + PADDING));
-    };
-
-
-    let maxX: number = -Infinity;
+    const yUnit = scaleLinear().range([0, BANDHEIGHT * (1 + PADDING)]);
 
     const opts = data.reduce(
       (p, d) => {
-        const width = x(d.end) - x(d.start);
+        const width = xUnit(d.end) - xUnit(d.start);
 
         if (width < 0) {
           console.warn(`Start ${d.start} is after End ${d.end}`);
-
           return p;
         }
 
-        const localX = x(d.start);
-        if (localX + width > maxX) {
-          maxX = localX + width;
-        }
-
-        let fillColor = this.opts.toFill ? this.opts.toFill(d) : '#ccc';
+        let fillColor = this.opts.toFill ? this.opts.toFill(d) : "#ccc";
 
         const value = {
-          x: localX,
-          y: y(d.rowId) || 0,
+          x: xUnit(d.start),
+          y: yUnit(d.row) || 0,
           width,
-          height: BANDWIDTH,
+          height: BANDHEIGHT,
           fill: fillColor,
           text: {
             offsetX: 0,
@@ -113,15 +111,56 @@ export class Timeline {
       [] as RenderOp[]
     );
 
+    const totalDuration = (xMax || 0) - (xMin || 0);
+
+    const ySummary = Object.keys(rowMap).map(d => {
+      const totalForRow = rowMap[d].reduce((p, c) => p + c.duration, 0);
+      rowMap[d] = rowMap[d].sort((a, b) => a.start - b.start);
+      return {
+        index: parseInt(d),
+        pct: totalForRow / totalDuration,
+      };
+    });
+
+    const BUCKETS = 100;
+    const increment = totalDuration / BUCKETS;
+
+    const xSummary = [...new Array(BUCKETS)].map((n, bucket) => {
+      let totalForColumn = 0;
+
+      Object.keys(rowMap).forEach(row => {
+        const rowItems = rowMap[row];
+        const columnAsX = (xMin || 0) + increment * bucket + increment / 2;
+
+        let i = 0;
+        let r = rowItems[i];
+
+        while (r && r.start <= columnAsX) {
+          if (r.end >= columnAsX) totalForColumn++;
+          i++;
+          r = rowItems[i];
+        }
+      });
+
+      const totalX = rows.length;
+      return {
+        index: bucket,
+        pct: totalForColumn / totalX,
+      };
+    });
+
+    console.log(xSummary);
     return {
-        opts,
-        xMax: maxX,
-        yMax: rows.length * (20 * (1 + PADDING)) 
+      opts,
+      xMax: xUnit(xMax || 0),
+      yMax: yUnit(rows.length),
+      xSummary,
+      ySummary,
     };
   }
 
   render() {
-    const renderData = this.transformData(this.data) 
+    const renderData = this.transformData(this.data);
     this.renderer.render(renderData);
   }
 }
