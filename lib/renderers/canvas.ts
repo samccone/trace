@@ -1,4 +1,4 @@
-import { Renderer, RenderOp, Renderer } from "./renderer";
+import { RenderOp, Renderer } from "./renderer";
 
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
@@ -11,8 +11,8 @@ export class CanvasRenderer implements Renderer {
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
   private lastOps?: { opts: RenderOp[]; xMax: number; yMax: number };
-  private zoomLevel: number = 1;
-  private lastOps?:  {opts: RenderOp[], xMax: number, yMax: number};
+  private zoomLevel: number = 0;
+  private margin: {top: number; left: number};
 
   constructor(
     public readonly dimensions: {
@@ -22,11 +22,11 @@ export class CanvasRenderer implements Renderer {
     },
     public readonly target: Element
   ) {
-    const margin = this.dimensions.margin || { top: 100, left: 100 };
+    this.margin = this.dimensions.margin || { top: 100, left: 100 };
 
     this.overflowElm = document.createElement("div");
     this.overflowElm.style.width = "1px";
-    this.overflowElm.style.height = "10000px";
+    this.overflowElm.style.height = "1px";
     this.wrapper = document.createElement("div");
     this.wrapper.style.overflow = "scroll";
     this.wrapper.style.zIndex = "1";
@@ -34,16 +34,16 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.height = `${dimensions.height}px`;
     this.wrapper.style.position = "relative";
 
-    this.displayDensity = window.devicePixelRatio;
+    this.displayDensity =  window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
-    this.canvas.width = (dimensions.width - margin.left) * this.displayDensity;
-    this.canvas.height = (dimensions.height - margin.top) * this.displayDensity;
-    this.canvas.style.width = `${dimensions.width - margin.left}px`;
-    this.canvas.style.height = `${dimensions.height - margin.top}px`;
+    this.canvas.width = (dimensions.width - this.margin.left) * this.displayDensity;
+    this.canvas.height = (dimensions.height - this.margin.top) * this.displayDensity;
+    this.canvas.style.width = `${dimensions.width - this.margin.left}px`;
+    this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
     this.canvas.style.pointerEvents = "none";
     this.canvas.style.position = "fixed";
-    this.canvas.style.left = `${margin.left}px`;
-    this.canvas.style.top = `${margin.top}px`;
+    this.canvas.style.left = `${this.margin.left}px`;
+    this.canvas.style.top = `${this.margin.top}px`;
 
     this.ctx = this.canvas.getContext("2d")!;
     this.ctx.font = "normal normal 10px monospace";
@@ -56,13 +56,12 @@ export class CanvasRenderer implements Renderer {
     this.axes.style.left = "0px";
     this.timeline = document.createElement("div");
     this.timeline.style.position = "relative";
-    this.timeline.style.left = `${margin.left}px`;
-    this.timeline.style.top = `${margin.top}px`;
+    this.timeline.style.left = `${this.margin.left}px`;
+    this.timeline.style.top = `${this.margin.top}px`;
 
     this.wrapper.appendChild(this.marginWrapper);
     this.marginWrapper.appendChild(this.axes);
     this.marginWrapper.appendChild(this.timeline);
-    this.timeline.appendChild(this.overflowElm);
     this.timeline.appendChild(this.canvas);
     this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
@@ -72,12 +71,12 @@ export class CanvasRenderer implements Renderer {
       this.onScroll();
     });
 
-    this.setTransform() 
+    this.setTransform()
   }
 
   private setTransform() {
     this.ctx.resetTransform();
-    this.ctx.scale(this.displayDensity + this.zoomLevel, this.displayDensity + this.zoomLevel);
+    this.ctx.scale(this.xScale(), this.yScale());
   }
 
   onScroll() {
@@ -91,18 +90,30 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
+  private xScale() {
+    return this.displayDensity + Math.max(0, this.zoomLevel);
+  }
+
+  private yScale() {
+    return this.displayDensity + Math.max(0, this.zoomLevel);
+  }
+
   private internalRender(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
     this.lastOps = instructions;
-
-    this.overflowElm.style.width = `${instructions.xMax * this.zoomLevel}px`;
-    this.overflowElm.style.height = `${instructions.yMax * this.zoomLevel}px`;
-
+    this.ctx.resetTransform();
     this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
+    this.overflowElm.style.width = `${this.margin.top + instructions.xMax * this.xScale()}px`;
+    this.overflowElm.style.height = `${this.margin.left + instructions.yMax * this.yScale()}px`;
+    this.setTransform();
+
+    const transformScrollX = this.scrollOffset.x / this.xScale();
+    const transformScrollY = this.scrollOffset.y / this.yScale();
+
     for (const opt of instructions.opts) {
       this.ctx.fillStyle = opt.fill;
       this.ctx.fillRect(
-        opt.x - this.scrollOffset.x,
-        opt.y - this.scrollOffset.y,
+        opt.x - transformScrollX,
+        opt.y - transformScrollY,
         opt.width,
         opt.height
       );
@@ -115,31 +126,31 @@ export class CanvasRenderer implements Renderer {
 
         this.ctx.fillText(
           opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
-          opt.x + (opt.text.offsetX || 0) - this.scrollOffset.x,
+          opt.x + (opt.text.offsetX || 0) - transformScrollX,
           opt.y +
-            (opt.text.offsetY || opt.height / 2 - fontSize / 2) -
-            this.scrollOffset.y
+            (opt.text.offsetY || opt.height / 2 - fontSize / 2) - transformScrollY,
         );
       }
     }
   }
 
-  zoomIn() {
-    this.zoomLevel += 0.1;
-    this.setTransform();
+
+  private zoom(changeAmount: number) {
+    this.zoomLevel += changeAmount;
     if (this.lastOps) {
       this.render(this.lastOps)
     }
   }
 
+  zoomIn() {
+    this.zoom(0.1);
+  }
+
   zoomOut() {
-    this.zoomLevel = Math.max(0.1, this.zoomLevel - 0.10);
-    this.setTransform();
-    if (this.lastOps) {
-      this.render(this.lastOps)
-    }
+    this.zoom(-0.1);
   }
 
   render(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
     requestAnimationFrame(() => this.internalRender(instructions));
+  }
 }
