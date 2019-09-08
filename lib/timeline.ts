@@ -1,12 +1,30 @@
 import { Renderer, RenderOp } from "./renderers/renderer";
-import { TimelineEvents } from "./format";
+import { TimelineEvents, TimelineEvent } from "./format";
 import { scaleLinear } from "d3-scale";
 
 export class Timeline {
   constructor(
     public readonly renderer: Renderer,
-    public readonly data: TimelineEvents
-  ) {}
+    public readonly data: TimelineEvents,
+    private readonly opts: {
+      toFill?: (t: TimelineEvent) => string;
+    } = {},
+  ) {
+
+    this.setListeners();
+  }
+
+  private setListeners() {
+    window.addEventListener('keypress', (e) => {
+      if (e.key === "k") {
+        this.renderer.zoomIn();
+      }
+
+      if (e.key === "j") {
+        this.renderer.zoomOut();
+      }
+    });
+  }
 
   transformData(data: TimelineEvents) {
     let xMin: number | undefined;
@@ -45,7 +63,7 @@ export class Timeline {
 
     const x = scaleLinear()
       .domain([xMin || 0,( xMin || 0) + ( median.end - median.start)])
-      .range([0, 150]);
+      .range([0, 100]);
 
     const PADDING = 0.3;
     const BANDWIDTH = 20;
@@ -72,12 +90,14 @@ export class Timeline {
           maxX = localX + width;
         }
 
+        let fillColor = this.opts.toFill ? this.opts.toFill(d) : '#ccc';
+
         const value = {
           x: localX,
           y: y(d.rowId) || 0,
           width,
           height: BANDWIDTH,
-          fill: "#ccc",
+          fill: fillColor,
           text: {
             offsetX: 0,
             offsetY: 0,

@@ -1,4 +1,4 @@
-import { Renderer, RenderOp } from "./renderer";
+import { Renderer, RenderOp, Renderer } from "./renderer";
 
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
@@ -11,6 +11,8 @@ export class CanvasRenderer implements Renderer {
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
   private lastOps?: { opts: RenderOp[]; xMax: number; yMax: number };
+  private zoomLevel: number = 1;
+  private lastOps?:  {opts: RenderOp[], xMax: number, yMax: number};
 
   constructor(
     public readonly dimensions: {
@@ -46,8 +48,7 @@ export class CanvasRenderer implements Renderer {
     this.ctx = this.canvas.getContext("2d")!;
     this.ctx.font = "normal normal 10px monospace";
     this.ctx.textBaseline = "top";
-    this.ctx.scale(this.displayDensity, this.displayDensity);
-    // this.ctx.scale(0.1, 0.1);
+
     this.marginWrapper = document.createElement("div");
     this.axes = document.createElement("div");
     this.axes.style.position = "relative";
@@ -63,11 +64,20 @@ export class CanvasRenderer implements Renderer {
     this.marginWrapper.appendChild(this.timeline);
     this.timeline.appendChild(this.overflowElm);
     this.timeline.appendChild(this.canvas);
+    this.wrapper.appendChild(this.overflowElm);
+    this.wrapper.appendChild(this.canvas);
     this.target.appendChild(this.wrapper);
 
     this.wrapper.addEventListener("scroll", () => {
       this.onScroll();
     });
+
+    this.setTransform() 
+  }
+
+  private setTransform() {
+    this.ctx.resetTransform();
+    this.ctx.scale(this.displayDensity + this.zoomLevel, this.displayDensity + this.zoomLevel);
   }
 
   onScroll() {
@@ -77,14 +87,15 @@ export class CanvasRenderer implements Renderer {
     };
 
     if (this.lastOps) {
-      this.render(this.lastOps);
+      this.internalRender(this.lastOps);
     }
   }
 
-  render(instructions: { opts: RenderOp[]; xMax: number; yMax: number }) {
+  private internalRender(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
     this.lastOps = instructions;
-    this.overflowElm.style.width = `${instructions.xMax}px`;
-    this.overflowElm.style.height = `${instructions.yMax}px`;
+
+    this.overflowElm.style.width = `${instructions.xMax * this.zoomLevel}px`;
+    this.overflowElm.style.height = `${instructions.yMax * this.zoomLevel}px`;
 
     this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
     for (const opt of instructions.opts) {
@@ -112,4 +123,23 @@ export class CanvasRenderer implements Renderer {
       }
     }
   }
+
+  zoomIn() {
+    this.zoomLevel += 0.1;
+    this.setTransform();
+    if (this.lastOps) {
+      this.render(this.lastOps)
+    }
+  }
+
+  zoomOut() {
+    this.zoomLevel = Math.max(0.1, this.zoomLevel - 0.10);
+    this.setTransform();
+    if (this.lastOps) {
+      this.render(this.lastOps)
+    }
+  }
+
+  render(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
+    requestAnimationFrame(() => this.internalRender(instructions));
 }
