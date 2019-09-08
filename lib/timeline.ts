@@ -9,7 +9,22 @@ export class Timeline {
     private readonly opts: {
       toFill?: (t: TimelineEvent) => string;
     } = {},
-  ) {}
+  ) {
+
+    this.setListeners();
+  }
+
+  private setListeners() {
+    window.addEventListener('keypress', (e) => {
+      if (e.key === "k") {
+        this.renderer.zoomIn();
+      }
+
+      if (e.key === "j") {
+        this.renderer.zoomOut();
+      }
+    });
+  }
 
   transformData(data: TimelineEvents) {
     let xMin: number | undefined;

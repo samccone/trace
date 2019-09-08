@@ -1,4 +1,4 @@
-import { Renderer, RenderOp } from "./renderer";
+import { Renderer, RenderOp, Renderer } from "./renderer";
 
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
@@ -8,6 +8,7 @@ export class CanvasRenderer implements Renderer {
   private overflowElm: HTMLElement;
   private scrollOffset: {x: number; y: number} = {x: 0, y: 0};
   private lastOps?:  {opts: RenderOp[], xMax: number, yMax: number};
+  private zoomLevel: number = 1;
 
   constructor(
     public readonly dimensions: { width: number; height: number },
@@ -37,7 +38,6 @@ export class CanvasRenderer implements Renderer {
     this.ctx = this.canvas.getContext("2d")!;
     this.ctx.font = 'normal normal 8px monospace'
     this.ctx.textBaseline = "top";
-    this.ctx.scale(this.displayDensity, this.displayDensity);
     this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
     this.target.appendChild(this.wrapper);
@@ -45,6 +45,13 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.addEventListener('scroll', () => {
         this.onScroll();
     });
+
+    this.setTransform() 
+  }
+
+  private setTransform() {
+    this.ctx.resetTransform();
+    this.ctx.scale(this.displayDensity + this.zoomLevel, this.displayDensity + this.zoomLevel);
   }
 
   onScroll() {
@@ -61,8 +68,8 @@ export class CanvasRenderer implements Renderer {
   private internalRender(instructions: {opts: RenderOp[], xMax: number, yMax: number}) {
     this.lastOps = instructions;
 
-    this.overflowElm.style.width = `${instructions.xMax}px`;
-    this.overflowElm.style.height = `${instructions.yMax}px`;
+    this.overflowElm.style.width = `${instructions.xMax * this.zoomLevel}px`;
+    this.overflowElm.style.height = `${instructions.yMax * this.zoomLevel}px`;
 
     this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
     for (const opt of instructions.opts) {
@@ -81,6 +88,22 @@ export class CanvasRenderer implements Renderer {
           opt.y + (opt.text.offsetY || opt.height / 2 - fontSize / 2) - this.scrollOffset.y,
         );
       }
+    }
+  }
+
+  zoomIn() {
+    this.zoomLevel += 0.1;
+    this.setTransform();
+    if (this.lastOps) {
+      this.render(this.lastOps)
+    }
+  }
+
+  zoomOut() {
+    this.zoomLevel = Math.max(0.1, this.zoomLevel - 0.10);
+    this.setTransform();
+    if (this.lastOps) {
+      this.render(this.lastOps)
     }
   }
 

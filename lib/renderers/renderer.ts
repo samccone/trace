@@ -18,4 +18,9 @@ export abstract class Renderer {
    }
 
    abstract render(opts: {opts: RenderOp[], xMax: number, yMax: number}): void;
+
+
+   abstract zoomIn(): void;
+
+   abstract zoomOut(): void;
 }
