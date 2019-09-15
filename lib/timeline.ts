@@ -3,6 +3,9 @@ import { TimelineEvents, TimelineEvent } from "./format";
 import { scaleLinear } from "d3-scale";
 
 export class Timeline {
+  private pointerDown = false;
+  private pointerDownPosition: { x: number; y: number } | null = null;
+
   constructor(
     public readonly renderer: Renderer,
     public readonly data: TimelineEvents,
@@ -14,6 +17,55 @@ export class Timeline {
   }
 
   private setListeners() {
+    window.addEventListener("keydown", (e: Event) => {
+      if (e.code === "Space") {
+        if (!this.dragging) {
+          this.renderer.startDragging();
+          this.dragging = true;
+        }
+
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (e: Event) => {
+      if (e.code === "Space") {
+        this.dragging = false;
+        this.renderer.stopDragging();
+      }
+    });
+
+    window.addEventListener("pointermove", (e: Event) => {
+      if (this.dragging && this.pointerDown) {
+        if (this.pointerDownPosition == null) {
+          this.pointerDownPosition = { x: e.layerX, y: e.layerY };
+        } else {
+          const x = this.pointerDownPosition.x - e.layerX;
+          const y = this.pointerDownPosition.y - e.layerY;
+          this.renderer.scrollBy({ x, y });
+          this.pointerDownPosition = { x: e.layerX, y: e.layerY };
+        }
+      }
+    });
+
+    window.addEventListener("pointerdown", (e: Event) => {
+      this.pointerDown = true;
+
+      if (this.dragging) {
+        this.pointerDownPosition = { x: e.layerX, y: e.layerY };
+        this.renderer.grab();
+      }
+    });
+
+    window.addEventListener("pointerup", (e: Event) => {
+      this.pointerDown = false;
+      this.pointerDownPosition = null;
+
+      if (this.dragging) {
+        this.renderer.startDragging();
+      }
+    });
+
     window.addEventListener(
       "wheel",
       (e: WheelEvent) => {
