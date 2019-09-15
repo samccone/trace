@@ -175,6 +175,7 @@ export class CanvasRenderer implements Renderer {
 
     this.yAxisCtx.resetTransform();
     this.yAxisCtx.scale(1, this.yScale());
+
     this.xAxisCtx.resetTransform();
     this.xAxisCtx.scale(this.xScale(), 1);
   }
@@ -216,6 +217,8 @@ export class CanvasRenderer implements Renderer {
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.ctx.resetTransform();
+    // this.ySummaryCtx.resetTransform();
+    // this.xSummaryCtx.resetTransform();
     this.yAxisCtx.resetTransform();
     this.xAxisCtx.resetTransform();
     this.ctx.clearRect(
@@ -226,6 +229,20 @@ export class CanvasRenderer implements Renderer {
     );
     this.overflowElm.style.width = `${this.maxWidth()}px`;
     this.overflowElm.style.height = `${this.maxHeight()}px`;
+
+    this.ySummaryCtx.clearRect(
+      0,
+      0,
+      this.dimensions.width * this.displayDensity,
+      this.dimensions.height * this.displayDensity
+    );
+
+    this.xSummaryCtx.clearRect(
+      0,
+      0,
+      this.xAxis.width * this.displayDensity * 1,
+      this.xAxis.height * this.displayDensity
+    );
 
     this.yAxisCtx.clearRect(
       0,
@@ -286,7 +303,7 @@ export class CanvasRenderer implements Renderer {
         ySummaryX(0) - ySummaryX(yS.pct),
         ySummaryY(1)
       );
-      this.yAxisCtx.fillStyle = "#cccccc";
+      this.yAxisCtx.fillStyle = "#b7b7d1";
 
       if (yS.y !== undefined && yS.height !== undefined) {
         this.yAxisCtx.fillRect(
@@ -307,6 +324,22 @@ export class CanvasRenderer implements Renderer {
       }
     }
 
+    const shownY = Math.min(1, this.canvas.height / this.timelineHeight());
+    const offsetY = this.wrapper.scrollTop / this.timelineHeight();
+
+    this.ySummaryCtx.strokeStyle = "blue";
+    this.ySummaryCtx.fillStyle = "rgba(0,0,255,.1)";
+
+    const yBrush = [
+      0,
+      (this.ySummary.width / this.displayDensity) * offsetY,
+      this.ySummary.width / this.displayDensity,
+      (this.ySummary.height / this.displayDensity) * shownY
+    ];
+
+    this.ySummaryCtx.strokeRect(...yBrush);
+    this.ySummaryCtx.fillRect(...yBrush);
+
     const xSummaryX = scaleLinear()
       .domain([0, instructions.xSummary.length])
       .range([0, this.xSummary.width / this.displayDensity]);
@@ -316,7 +349,6 @@ export class CanvasRenderer implements Renderer {
       .range([0, this.xSummary.height / this.displayDensity]);
 
     this.xSummaryCtx.fillStyle = "#cccccc";
-    this.xAxisCtx.fillStyle = "#cccccc";
 
     for (const [i, xS] of instructions.xSummary.entries()) {
       this.xSummaryCtx.fillRect(
@@ -326,7 +358,7 @@ export class CanvasRenderer implements Renderer {
         xSummaryY(0) - xSummaryY(xS.pct)
       );
 
-      this.xAxisCtx.fillStyle = "#cccccc";
+      this.xAxisCtx.fillStyle = "#b7b7d1";
 
       if (xS.x !== undefined && xS.width !== undefined) {
         this.xAxisCtx.fillRect(
@@ -346,6 +378,20 @@ export class CanvasRenderer implements Renderer {
         }
       }
     }
+
+    const shownX = Math.min(1, this.canvas.width / this.timelineWidth());
+    const offsetX = this.wrapper.scrollLeft / this.timelineWidth();
+
+    this.xSummaryCtx.strokeStyle = "blue";
+    this.xSummaryCtx.fillStyle = "rgba(0,0,255,.1)";
+    const xBrush = [
+      (this.xSummary.width / this.displayDensity) * offsetX,
+      0,
+      (this.xSummary.width / this.displayDensity) * shownX,
+      this.xSummary.height / this.displayDensity
+    ];
+    this.xSummaryCtx.strokeRect(...xBrush);
+    this.xSummaryCtx.fillRect(...xBrush);
   }
 
   private zoom({
