@@ -17,6 +17,7 @@ const formatDate = d => {
 export class Timeline {
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
+  private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor(
     public readonly renderer: Renderer,
@@ -48,6 +49,8 @@ export class Timeline {
     });
 
     window.addEventListener("pointermove", (e: Event) => {
+      this.lastMousePosition = { x: e.layerX, y: e.layerY };
+
       if (this.dragging && this.pointerDown) {
         if (this.pointerDownPosition == null) {
           this.pointerDownPosition = { x: e.layerX, y: e.layerY };
@@ -83,9 +86,9 @@ export class Timeline {
       (e: WheelEvent) => {
         if (e.metaKey || e.ctrlKey) {
           if (e.deltaY != null && e.deltaY < 0) {
-            this.renderer.zoomIn();
+            this.renderer.zoomIn(this.lastMousePosition);
           } else {
-            this.renderer.zoomOut();
+            this.renderer.zoomOut(this.lastMousePosition);
           }
 
           e.preventDefault();

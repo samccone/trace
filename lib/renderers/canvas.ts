@@ -198,6 +198,21 @@ export class CanvasRenderer implements Renderer {
     return this.displayDensity + this.zoomLevel;
   }
 
+  private timelineWidth(): number {
+    return this.lastOps.xMax * this.xScale();
+  }
+
+  private timelineHeight(): number {
+    return this.lastOps.yMax * this.yScale();
+  }
+  private maxHeight(): number {
+    return this.margin.left + this.timelineHeight();
+  }
+
+  private maxWidth(): number {
+    return this.margin.top + this.timelineWidth();
+  }
+
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.ctx.resetTransform();
@@ -209,10 +224,8 @@ export class CanvasRenderer implements Renderer {
       this.dimensions.width * this.displayDensity,
       this.dimensions.height * this.displayDensity
     );
-    this.overflowElm.style.width = `${this.margin.top +
-      instructions.xMax * this.xScale()}px`;
-    this.overflowElm.style.height = `${this.margin.left +
-      instructions.yMax * this.yScale()}px`;
+    this.overflowElm.style.width = `${this.maxWidth()}px`;
+    this.overflowElm.style.height = `${this.maxHeight()}px`;
 
     this.yAxisCtx.clearRect(
       0,
@@ -335,25 +348,45 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  private zoom(changeAmount: number): void {
+  private zoom({
+    changeAmount,
+    mousePosition
+  }: {
+    changeAmount: number;
+    mousePosition: { x: number; y: number };
+  }): void {
+    if (this.lastOps == null) {
+      return;
+    }
+
+    const viewportMouseX = Math.max(0, mousePosition.x - this.margin.left);
+    const viewportMouseY = Math.max(0, mousePosition.y - this.margin.top);
+    const timelineXPercent =
+      (viewportMouseX + this.wrapper.scrollLeft) / this.timelineWidth();
+    const timelineYPercent =
+      (viewportMouseY + this.wrapper.scrollTop) / this.timelineHeight();
+
     const originalZoomLevel = this.zoomLevel;
     this.zoomLevel += changeAmount;
     if (this.xScale() <= MIN_ZOOM || this.yScale() <= MIN_ZOOM) {
       this.zoomLevel = originalZoomLevel;
-      return this.zoom(changeAmount / 2);
-    } else {
-      if (this.lastOps) {
-        this.render(this.lastOps);
-      }
+      return;
     }
+
+    this.wrapper.scrollTo(
+      timelineXPercent * this.timelineWidth() - viewportMouseX,
+      timelineYPercent * this.timelineHeight() - viewportMouseY
+    );
+
+    this.render(this.lastOps);
   }
 
-  zoomIn() {
-    this.zoom(ZOOM_AMOUNT);
+  zoomIn(mousePosition: { x: number; y: number }) {
+    this.zoom({ changeAmount: ZOOM_AMOUNT, mousePosition });
   }
 
-  zoomOut() {
-    this.zoom(-ZOOM_AMOUNT);
+  zoomOut(mousePosition: { x: number; y: number }) {
+    this.zoom({ changeAmount: -ZOOM_AMOUNT, mousePosition });
   }
 
   startDragging() {

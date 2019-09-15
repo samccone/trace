@@ -20,9 +20,9 @@ export abstract class Renderer {
 
   abstract render(opts: { opts: RenderOp[]; xMax: number; yMax: number }): void;
 
-  abstract zoomIn(): void;
+  abstract zoomIn(mousePosition: { x: number; y: number }): void;
 
-  abstract zoomOut(): void;
+  abstract zoomOut(mousePosition: { x: number; y: number }): void;
 
   abstract startDragging(): void;
 
