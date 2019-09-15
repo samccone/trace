@@ -2,6 +2,18 @@ import { Renderer, RenderOp } from "./renderers/renderer";
 import { TimelineEvents, TimelineEvent } from "./format";
 import { scaleLinear } from "d3-scale";
 
+const padNumbers = num => {
+  const s = num + "";
+  if (s.length === 1) return `0${s}`;
+  return s;
+};
+
+const formatDate = d => {
+  return `${padNumbers(d.getHours())}:${padNumbers(
+    d.getMinutes()
+  )}:${padNumbers(d.getSeconds())}`;
+};
+
 export class Timeline {
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
@@ -172,12 +184,15 @@ export class Timeline {
 
     const totalDuration = (xMax || 0) - (xMin || 0);
 
-    const ySummary = Object.keys(rowMap).map(d => {
+    const ySummary = Object.keys(rowMap).map((d, i) => {
       const totalForRow = rowMap[d].reduce((p, c) => p + c.duration, 0);
       rowMap[d] = rowMap[d].sort((a, b) => a.start - b.start);
       return {
         index: parseInt(d),
-        pct: totalForRow / totalDuration
+        pct: totalForRow / totalDuration,
+        y: yUnit(parseInt(d)),
+        height: BANDHEIGHT,
+        text: rows[i]
       };
     });
 
@@ -204,7 +219,10 @@ export class Timeline {
       const totalX = rows.length;
       return {
         index: bucket,
-        pct: totalForColumn / totalX
+        pct: totalForColumn / totalX,
+        x: xUnit((xMin || 0) + increment * bucket),
+        width: xUnit((xMin || 0) + increment),
+        text: formatDate(new Date((xMin || 0) + increment * bucket))
       };
     });
 
@@ -212,6 +230,8 @@ export class Timeline {
       opts,
       xMax: xUnit(xMax || 0),
       yMax: yUnit(rows.length),
+      xUnit,
+      yUnit,
       xSummary,
       ySummary
     };

@@ -20,4 +20,9 @@ export type TimelineEvents = TimelineEvent[];
 export interface SummaryEvent {
   index: number;
   pct: number;
+  x?: number;
+  width?: number;
+  y?: number;
+  height?: number;
+  text?: string;
 }

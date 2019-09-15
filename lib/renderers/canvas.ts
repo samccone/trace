@@ -1,11 +1,13 @@
 import { RenderOp, Renderer } from "./renderer";
 import { SummaryEvent } from "../format";
-import { scaleLinear } from "d3-scale";
+import { scaleLinear, ScaleLinear } from "d3-scale";
 
 interface RenderInstructions {
   opts: RenderOp[];
   xMax: number;
   yMax: number;
+  xUnit: ScaleLinear<number, number>;
+  yUnit: ScaleLinear<number, number>;
   ySummary: SummaryEvent[];
   xSummary: SummaryEvent[];
 }
@@ -22,8 +24,12 @@ export class CanvasRenderer implements Renderer {
   private axes: HTMLElement;
   private ySummary: HTMLCanvasElement;
   private ySummaryCtx: CanvasRenderingContext2D;
+  private yAxis: HTMLCanvasElement;
+  private yAxisCtx: CanvasRenderingContext2D;
   private xSummary: HTMLCanvasElement;
   private xSummaryCtx: CanvasRenderingContext2D;
+  private xAxis: HTMLCanvasElement;
+  private xAxisCtx: CanvasRenderingContext2D;
   private marginWrapper: HTMLElement;
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
@@ -87,11 +93,28 @@ export class CanvasRenderer implements Renderer {
       this.margin.top -
       20}px`;
     this.ySummary.style.border = `1px solid #cccccc`;
+    this.ySummary.style.borderRight = `1px solid black`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
     this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.axes.appendChild(this.ySummary);
+
+    this.yAxis = document.createElement("canvas");
+    this.yAxis.className = "yAxis";
+    this.yAxis.style.position = "fixed";
+    this.yAxis.style.top = `${this.margin.top}px`;
+    this.yAxis.style.left = `${this.margin.left / 2}px`;
+    this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
+    this.yAxis.height =
+      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+    this.yAxis.style.width = `${this.margin.left / 2}px`;
+    this.yAxis.style.height = `${dimensions.height - this.margin.top - 20}px`;
+    this.yAxis.style.borderRight = `1px solid black`;
+
+    this.yAxisCtx = this.yAxis.getContext("2d")!;
+
+    this.axes.appendChild(this.yAxis);
 
     this.xSummary = document.createElement("canvas");
     this.xSummary.className = "xSummary";
@@ -103,11 +126,28 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.style.width = `${dimensions.width - this.margin.left - 20}px`;
     this.xSummary.style.height = `${this.margin.top / 2}px`;
     this.xSummary.style.border = `1px solid #cccccc`;
+    this.xSummary.style.borderBottom = `1px solid black`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
     this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.axes.appendChild(this.xSummary);
+
+    this.xAxis = document.createElement("canvas");
+    this.xAxis.className = "xAxis";
+    this.xAxis.style.position = "fixed";
+    this.xAxis.style.left = `${this.margin.left}px`;
+    this.xAxis.style.top = `${this.margin.top / 2}px`;
+    this.xAxis.width =
+      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+    this.xAxis.height = (this.margin.top / 2) * this.displayDensity;
+    this.xAxis.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xAxis.style.height = `${this.margin.top / 2}px`;
+    this.xAxis.style.borderBottom = `1px solid black`;
+
+    this.xAxisCtx = this.xAxis.getContext("2d")!;
+
+    this.axes.appendChild(this.xAxis);
 
     this.timeline = document.createElement("div");
     this.timeline.style.position = "relative";
@@ -132,6 +172,11 @@ export class CanvasRenderer implements Renderer {
   private setTransform() {
     this.ctx.resetTransform();
     this.ctx.scale(this.xScale(), this.yScale());
+
+    this.yAxisCtx.resetTransform();
+    this.yAxisCtx.scale(1, this.yScale());
+    this.xAxisCtx.resetTransform();
+    this.xAxisCtx.scale(this.xScale(), 1);
   }
 
   onScroll() {
@@ -156,6 +201,8 @@ export class CanvasRenderer implements Renderer {
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.ctx.resetTransform();
+    this.yAxisCtx.resetTransform();
+    this.xAxisCtx.resetTransform();
     this.ctx.clearRect(
       0,
       0,
@@ -166,10 +213,26 @@ export class CanvasRenderer implements Renderer {
       instructions.xMax * this.xScale()}px`;
     this.overflowElm.style.height = `${this.margin.left +
       instructions.yMax * this.yScale()}px`;
+
+    this.yAxisCtx.clearRect(
+      0,
+      0,
+      this.dimensions.width * this.displayDensity,
+      this.dimensions.height * this.displayDensity
+    );
+
+    this.xAxisCtx.clearRect(
+      0,
+      0,
+      this.xAxis.width * this.displayDensity * 1,
+      this.xAxis.height * this.displayDensity
+    );
+
     this.setTransform();
 
     const transformScrollX = this.scrollOffset.x / this.xScale();
     const transformScrollY = this.scrollOffset.y / this.yScale();
+    const fontSize = parseInt(this.ctx.font);
 
     for (const opt of instructions.opts) {
       this.ctx.fillStyle = opt.fill;
@@ -183,8 +246,6 @@ export class CanvasRenderer implements Renderer {
         if (opt.text.fill != null) {
           this.ctx.fillStyle = opt.text.fill;
         }
-
-        const fontSize = parseInt(this.ctx.font);
 
         this.ctx.fillText(
           opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
@@ -212,6 +273,25 @@ export class CanvasRenderer implements Renderer {
         ySummaryX(0) - ySummaryX(yS.pct),
         ySummaryY(1)
       );
+      this.yAxisCtx.fillStyle = "#cccccc";
+
+      if (yS.y !== undefined && yS.height !== undefined) {
+        this.yAxisCtx.fillRect(
+          ySummaryX(yS.pct),
+          yS.y - transformScrollY,
+          ySummaryX(0) - ySummaryX(yS.pct),
+          yS.height
+        );
+
+        this.yAxisCtx.fillStyle = "black";
+
+        yS.text &&
+          this.yAxisCtx.fillText(
+            yS.text.slice(0, Math.floor(this.yAxis.width / fontSize) + 3),
+            0,
+            yS.y - transformScrollY + yS.height / 2
+          );
+      }
     }
 
     const xSummaryX = scaleLinear()
@@ -223,14 +303,35 @@ export class CanvasRenderer implements Renderer {
       .range([0, this.xSummary.height / this.displayDensity]);
 
     this.xSummaryCtx.fillStyle = "#cccccc";
+    this.xAxisCtx.fillStyle = "#cccccc";
 
-    for (const xS of instructions.xSummary) {
+    for (const [i, xS] of instructions.xSummary.entries()) {
       this.xSummaryCtx.fillRect(
         xSummaryX(xS.index),
         xSummaryY(xS.pct),
         xSummaryX(1),
         xSummaryY(0) - xSummaryY(xS.pct)
       );
+
+      this.xAxisCtx.fillStyle = "#cccccc";
+
+      if (xS.x !== undefined && xS.width !== undefined) {
+        this.xAxisCtx.fillRect(
+          xS.x - transformScrollX,
+          xSummaryY(xS.pct),
+          xS.width,
+          xSummaryY(0) - xSummaryY(xS.pct)
+        );
+        this.xAxisCtx.fillStyle = "black";
+
+        if (xS.text && i % 3 === 0) {
+          this.xAxisCtx.fillText(
+            xS.text,
+            xS.x - transformScrollX,
+            this.xAxis.height
+          );
+        }
+      }
     }
   }
 
