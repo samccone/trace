@@ -154,7 +154,12 @@ export class CanvasRenderer implements Renderer {
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.ctx.resetTransform();
-    this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
+    this.ctx.clearRect(
+      0,
+      0,
+      this.dimensions.width * this.displayDensity,
+      this.dimensions.height * this.displayDensity
+    );
     this.overflowElm.style.width = `${this.margin.top +
       instructions.xMax * this.xScale()}px`;
     this.overflowElm.style.height = `${this.margin.left +
