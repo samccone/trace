@@ -89,6 +89,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.style.border = `1px solid #cccccc`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
+    this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.axes.appendChild(this.ySummary);
 
@@ -104,6 +105,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.style.border = `1px solid #cccccc`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
+    this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.axes.appendChild(this.xSummary);
 
