@@ -338,7 +338,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummaryCtx.strokeStyle = "blue";
     this.ySummaryCtx.fillStyle = "rgba(0,0,255,.1)";
 
-    const yBrush = [
+    const yBrush: [number, number, number, number] = [
       0,
       (this.ySummary.width / this.displayDensity) * offsetY,
       this.ySummary.width / this.displayDensity,
@@ -392,7 +392,7 @@ export class CanvasRenderer implements Renderer {
 
     this.xSummaryCtx.strokeStyle = "blue";
     this.xSummaryCtx.fillStyle = "rgba(0,0,255,.1)";
-    const xBrush = [
+    const xBrush: [number, number, number, number] = [
       (this.xSummary.width / this.displayDensity) * offsetX,
       0,
       (this.xSummary.width / this.displayDensity) * shownX,
