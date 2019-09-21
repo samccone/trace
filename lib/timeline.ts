@@ -24,6 +24,7 @@ export class Timeline {
   private dragging = false;
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
+  private startDraggingPosition: { x: number; y: number } | null = null;
   private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
   private lastRenderOps: RenderInstructions | undefined;
 
@@ -38,44 +39,36 @@ export class Timeline {
   }
 
   private setListeners() {
-    window.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        if (!this.dragging) {
-          this.renderer.startDragging();
-          this.dragging = true;
-        }
-
-        e.preventDefault();
-      }
-    });
-
-    window.addEventListener("keyup", (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        this.dragging = false;
-        this.renderer.stopDragging();
-      }
-    });
-
     window.addEventListener("pointermove", (e: any) => {
       this.lastMousePosition = { x: e.layerX, y: e.layerY };
-
       if (this.dragging && this.pointerDown) {
         if (this.pointerDownPosition == null) {
           this.pointerDownPosition = { x: e.layerX, y: e.layerY };
         } else {
           const x = this.pointerDownPosition.x - e.layerX;
           const y = this.pointerDownPosition.y - e.layerY;
-          this.renderer.scrollBy({ x, y });
+          this.renderer.scrollBy({ x, y }, this.startDraggingPosition);
           this.pointerDownPosition = { x: e.layerX, y: e.layerY };
         }
       }
     });
 
+    window.addEventListener("click", (e: any) => {
+      const position = { x: e.layerX, y: e.layerY };
+
+      this.renderer.onClick(position);
+    });
+
     window.onpointerdown = (e: any) => {
       this.pointerDown = true;
+      const position = { x: e.layerX, y: e.layerY };
 
-      if (this.dragging) {
-        this.pointerDownPosition = { x: e.layerX, y: e.layerY };
+      if (!this.dragging) {
+        this.renderer.startDragging();
+        this.dragging = true;
+        this.startDraggingPosition = position;
+      } else if (this.dragging) {
+        this.pointerDownPosition = position;
         this.renderer.grab();
       }
     };
@@ -83,10 +76,9 @@ export class Timeline {
     window.addEventListener("pointerup", (_: PointerEvent) => {
       this.pointerDown = false;
       this.pointerDownPosition = null;
-
-      if (this.dragging) {
-        this.renderer.startDragging();
-      }
+      this.startDraggingPosition = null;
+      this.dragging = false;
+      this.renderer.stopDragging();
     });
 
     window.addEventListener(
