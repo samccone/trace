@@ -1,6 +1,7 @@
 import { Renderer } from "./renderer";
 import { RenderInstructions } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
+import { binarySearch } from "../search";
 
 const ZOOM_AMOUNT = 0.1;
 const MIN_ZOOM = 0.1;
@@ -154,9 +155,7 @@ export class CanvasRenderer implements Renderer {
 
     const row = Math.floor(this.lastOps!.yUnit.invert(timelineY));
     const timestamp = this.lastOps!.xUnit.invert(timelineX);
-    const match = this.lastOps!.rowMap[row]!.find(v => {
-      return v.start <= timestamp && v.end >= timestamp;
-    });
+    const match = binarySearch(timestamp, this.lastOps!.rowMap[row]!);
 
     if (match != null) {
       console.log(match);
