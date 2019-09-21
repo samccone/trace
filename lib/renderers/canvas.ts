@@ -413,8 +413,14 @@ export class CanvasRenderer implements Renderer {
       return;
     }
 
-    const viewportMouseX = Math.max(0, mousePosition.x - this.margin.left);
-    const viewportMouseY = Math.max(0, mousePosition.y - this.margin.top);
+    const viewportMouseX = Math.max(
+      0,
+      mousePosition.x * this.displayDensity - this.margin.left
+    );
+    const viewportMouseY = Math.max(
+      0,
+      mousePosition.y * this.displayDensity - this.margin.top
+    );
     const timelineXPercent =
       (viewportMouseX + this.wrapper.scrollLeft) / this.timelineWidth();
     const timelineYPercent =
