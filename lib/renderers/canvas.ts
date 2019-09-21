@@ -127,8 +127,36 @@ export class CanvasRenderer implements Renderer {
       this.onScroll();
     });
 
+    // again any due to mouse event missing layerX/Y
+    this.wrapper.addEventListener("click", (e: any) => {
+      this.onClick({
+        x: e.layerX * this.displayDensity - this.margin.left,
+        y: e.layerY * this.displayDensity - this.margin.top
+      });
+    });
+
     this.resize(dimensions);
     this.setTransform();
+  }
+
+  private onClick({ x, y }: { x: number; y: number }) {
+    if (x < 0 || y < 0) {
+      // skip
+      return;
+    }
+
+    const timelineX = x + this.wrapper.scrollLeft;
+    const timelineY = y + this.wrapper.scrollTop;
+
+    const row = Math.floor(this.lastOps!.yUnit.invert(timelineY));
+    const timestamp = this.lastOps!.xUnit.invert(timelineX);
+    const match = this.lastOps!.rowMap[row]!.find(v => {
+      return v.start <= timestamp && v.end >= timestamp;
+    });
+
+    if (match != null) {
+      console.log(match);
+    }
   }
 
   resize(dimensions: { width: number; height: number }) {

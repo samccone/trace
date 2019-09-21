@@ -1,5 +1,9 @@
 import { ScaleLinear } from "d3-scale";
 
+export interface RowMap {
+  [idx: string]: TimelineEvent[];
+}
+
 export interface RenderOp {
   x: number;
   y: number;
@@ -22,6 +26,7 @@ export interface RenderInstructions {
   yUnit: ScaleLinear<number, number>;
   ySummary: SummaryEvent[];
   xSummary: SummaryEvent[];
+  rowMap: RowMap;
 }
 
 export interface TimelineEvent {

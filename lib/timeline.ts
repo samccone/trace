@@ -3,7 +3,8 @@ import {
   TimelineEvents,
   TimelineEvent,
   RenderInstructions,
-  RenderOp
+  RenderOp,
+  RowMap
 } from "./format";
 import { scaleLinear } from "d3-scale";
 
@@ -110,7 +111,7 @@ export class Timeline {
     let xMax: number | undefined;
     let facets: string[] = [];
     let rows: string[] = [];
-    let rowMap: { [idx: string]: TimelineEvent[] } = {};
+    let rowMap: RowMap = {};
 
     data.forEach(d => {
       if (!xMin || d.start < xMin) {
@@ -243,7 +244,8 @@ export class Timeline {
       xUnit,
       yUnit,
       xSummary,
-      ySummary
+      ySummary,
+      rowMap
     };
   }
 
