@@ -44,8 +44,7 @@ const timeline = new Timeline(
 document.body.appendChild(elm);
 
 window.addEventListener("resize", () => {
-  renderer.resize({ width: window.innerWidth, height: window.innerHeight });
-  timeline.cachedRender();
+  timeline.resize({ width: window.innerWidth, height: window.innerHeight });
 });
 
 timeline.render();

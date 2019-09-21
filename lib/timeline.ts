@@ -247,17 +247,16 @@ export class Timeline {
     };
   }
 
-  cachedRender() {
-    if (this.lastRenderOps == null) {
-      this.render();
-    } else {
-      this.renderer.render(this.lastRenderOps);
-    }
-  }
-
   render() {
     const renderData = this.transformData(this.data);
     this.lastRenderOps = renderData;
     this.renderer.render(renderData);
+  }
+
+  resize(dimensions: { width: number; height: number }) {
+    this.renderer.resize(dimensions);
+    if (this.lastRenderOps != null) {
+      this.renderer.render(this.lastRenderOps);
+    }
   }
 }
