@@ -34,7 +34,7 @@ export class CanvasRenderer implements Renderer {
   private margin: { top: number; left: number };
 
   constructor(
-    public readonly dimensions: {
+    public dimensions: {
       width: number;
       height: number;
       margin?: { top: number; left: number };
@@ -163,6 +163,8 @@ export class CanvasRenderer implements Renderer {
   }
 
   resize(dimensions: { width: number; height: number }) {
+    this.clearAll();
+    this.dimensions = { ...this.dimensions, ...dimensions };
     this.wrapper.style.width = `${dimensions.width}px`;
     this.wrapper.style.height = `${dimensions.height}px`;
 
@@ -261,27 +263,23 @@ export class CanvasRenderer implements Renderer {
     return this.margin.top + this.timelineWidth();
   }
 
-  private internalRender(instructions: RenderInstructions) {
-    this.lastOps = instructions;
+  private clearAll() {
     this.ctx.resetTransform();
-    // this.ySummaryCtx.resetTransform();
-    // this.xSummaryCtx.resetTransform();
     this.yAxisCtx.resetTransform();
     this.xAxisCtx.resetTransform();
+
     this.ctx.clearRect(
       0,
       0,
       this.dimensions.width * this.displayDensity,
       this.dimensions.height * this.displayDensity
     );
-    this.overflowElm.style.width = `${this.maxWidth()}px`;
-    this.overflowElm.style.height = `${this.maxHeight()}px`;
 
     this.ySummaryCtx.clearRect(
       0,
       0,
-      this.dimensions.width * this.displayDensity,
-      this.dimensions.height * this.displayDensity
+      this.ySummary.width * this.displayDensity,
+      this.ySummary.height * this.displayDensity
     );
 
     this.xSummaryCtx.clearRect(
@@ -294,8 +292,8 @@ export class CanvasRenderer implements Renderer {
     this.yAxisCtx.clearRect(
       0,
       0,
-      this.dimensions.width * this.displayDensity,
-      this.dimensions.height * this.displayDensity
+      this.yAxis.width * this.displayDensity,
+      this.yAxis.height * this.displayDensity
     );
 
     this.xAxisCtx.clearRect(
@@ -304,6 +302,13 @@ export class CanvasRenderer implements Renderer {
       this.xAxis.width * this.displayDensity * 1,
       this.xAxis.height * this.displayDensity
     );
+  }
+
+  private internalRender(instructions: RenderInstructions) {
+    this.lastOps = instructions;
+    this.clearAll();
+    this.overflowElm.style.width = `${this.maxWidth()}px`;
+    this.overflowElm.style.height = `${this.maxHeight()}px`;
 
     this.setTransform();
 
