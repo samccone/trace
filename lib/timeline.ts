@@ -1,5 +1,10 @@
-import { Renderer, RenderOp } from "./renderers/renderer";
-import { TimelineEvents, TimelineEvent } from "./format";
+import { Renderer } from "./renderers/renderer";
+import {
+  TimelineEvents,
+  TimelineEvent,
+  RenderInstructions,
+  RenderOp
+} from "./format";
 import { scaleLinear } from "d3-scale";
 
 const padNumbers = (num: number) => {
@@ -19,6 +24,7 @@ export class Timeline {
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
   private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
+  private lastRenderOps: RenderInstructions | undefined;
 
   constructor(
     public readonly renderer: Renderer,
@@ -241,8 +247,17 @@ export class Timeline {
     };
   }
 
+  cachedRender() {
+    if (this.lastRenderOps == null) {
+      this.render();
+    } else {
+      this.renderer.render(this.lastRenderOps);
+    }
+  }
+
   render() {
     const renderData = this.transformData(this.data);
+    this.lastRenderOps = renderData;
     this.renderer.render(renderData);
   }
 }

@@ -1,22 +1,12 @@
-export interface RenderOp {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text?: {
-    offsetX?: number;
-    offsetY?: number;
-    fill?: string;
-    text?: string;
-  };
-  fill: string;
-}
+import { RenderOp } from "../format";
 
 export abstract class Renderer {
   constructor(
     public readonly dimensions: { width: number; height: number },
     public readonly target: Element
   ) {}
+
+  abstract resize(dimensions: { width: number; height: number }): void;
 
   abstract render(opts: { opts: RenderOp[]; xMax: number; yMax: number }): void;
 

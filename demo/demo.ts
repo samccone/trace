@@ -12,7 +12,7 @@ const renderer = new CanvasRenderer(
 const timeline = new Timeline(
   renderer,
   (d as TimelineEvents).map((v: TimelineEvent) => {
-    v.label = v.label.replace(`['/bin/bash', '-c'`, "");
+    v.label = v.label.replace(`['/bin/bash', '-c', '`, "");
     return v;
   }),
   {
@@ -42,5 +42,10 @@ const timeline = new Timeline(
 );
 
 document.body.appendChild(elm);
+
+window.addEventListener("resize", () => {
+  renderer.resize({ width: window.innerWidth, height: window.innerHeight });
+  timeline.cachedRender();
+});
 
 timeline.render();

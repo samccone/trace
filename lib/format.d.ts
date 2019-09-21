@@ -1,3 +1,29 @@
+import { ScaleLinear } from "d3-scale";
+
+export interface RenderOp {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text?: {
+    offsetX?: number;
+    offsetY?: number;
+    fill?: string;
+    text?: string;
+  };
+  fill: string;
+}
+
+export interface RenderInstructions {
+  opts: RenderOp[];
+  xMax: number;
+  yMax: number;
+  xUnit: ScaleLinear<number, number>;
+  yUnit: ScaleLinear<number, number>;
+  ySummary: SummaryEvent[];
+  xSummary: SummaryEvent[];
+}
+
 export interface TimelineEvent {
   // Start time in miliseconds
   start: number;

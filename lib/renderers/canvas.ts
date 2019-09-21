@@ -1,16 +1,6 @@
-import { RenderOp, Renderer } from "./renderer";
-import { SummaryEvent } from "../format";
-import { scaleLinear, ScaleLinear } from "d3-scale";
-
-interface RenderInstructions {
-  opts: RenderOp[];
-  xMax: number;
-  yMax: number;
-  xUnit: ScaleLinear<number, number>;
-  yUnit: ScaleLinear<number, number>;
-  ySummary: SummaryEvent[];
-  xSummary: SummaryEvent[];
-}
+import { Renderer } from "./renderer";
+import { RenderInstructions } from "../format";
+import { scaleLinear } from "d3-scale";
 
 const ZOOM_AMOUNT = 0.1;
 const MIN_ZOOM = 0.1;
@@ -53,26 +43,16 @@ export class CanvasRenderer implements Renderer {
     this.wrapper = document.createElement("div");
     this.wrapper.style.overflow = "scroll";
     this.wrapper.style.zIndex = "1";
-    this.wrapper.style.width = `${dimensions.width}px`;
-    this.wrapper.style.height = `${dimensions.height}px`;
     this.wrapper.style.position = "relative";
 
     this.displayDensity = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
-    this.canvas.width =
-      (dimensions.width - this.margin.left) * this.displayDensity;
-    this.canvas.height =
-      (dimensions.height - this.margin.top) * this.displayDensity;
-    this.canvas.style.width = `${dimensions.width - this.margin.left}px`;
-    this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
+    this.ctx = this.canvas.getContext("2d")!;
+
     this.canvas.style.pointerEvents = "none";
     this.canvas.style.position = "fixed";
     this.canvas.style.left = `${this.margin.left}px`;
     this.canvas.style.top = `${this.margin.top}px`;
-
-    this.ctx = this.canvas.getContext("2d")!;
-    this.ctx.font = "normal normal 10px monospace";
-    this.ctx.textBaseline = "top";
 
     this.marginWrapper = document.createElement("div");
     this.axes = document.createElement("div");
@@ -85,13 +65,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.className = "ySummary";
     this.ySummary.style.position = "fixed";
     this.ySummary.style.top = `${this.margin.top}px`;
-    this.ySummary.width = (this.margin.left / 2) * this.displayDensity;
-    this.ySummary.height =
-      (dimensions.height - this.margin.top - 20) * this.displayDensity;
-    this.ySummary.style.width = `${this.margin.left / 2}px`;
-    this.ySummary.style.height = `${dimensions.height -
-      this.margin.top -
-      20}px`;
+
     this.ySummary.style.border = `1px solid #cccccc`;
     this.ySummary.style.borderRight = `1px solid black`;
 
@@ -105,11 +79,7 @@ export class CanvasRenderer implements Renderer {
     this.yAxis.style.position = "fixed";
     this.yAxis.style.top = `${this.margin.top}px`;
     this.yAxis.style.left = `${this.margin.left / 2}px`;
-    this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
-    this.yAxis.height =
-      (dimensions.height - this.margin.top - 20) * this.displayDensity;
-    this.yAxis.style.width = `${this.margin.left / 2}px`;
-    this.yAxis.style.height = `${dimensions.height - this.margin.top - 20}px`;
+
     this.yAxis.style.borderRight = `1px solid black`;
 
     this.yAxisCtx = this.yAxis.getContext("2d")!;
@@ -120,11 +90,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.className = "xSummary";
     this.xSummary.style.position = "fixed";
     this.xSummary.style.left = `${this.margin.left}px`;
-    this.xSummary.width =
-      (dimensions.width - this.margin.left - 20) * this.displayDensity;
-    this.xSummary.height = (this.margin.top / 2) * this.displayDensity;
-    this.xSummary.style.width = `${dimensions.width - this.margin.left - 20}px`;
-    this.xSummary.style.height = `${this.margin.top / 2}px`;
+
     this.xSummary.style.border = `1px solid #cccccc`;
     this.xSummary.style.borderBottom = `1px solid black`;
 
@@ -138,11 +104,6 @@ export class CanvasRenderer implements Renderer {
     this.xAxis.style.position = "fixed";
     this.xAxis.style.left = `${this.margin.left}px`;
     this.xAxis.style.top = `${this.margin.top / 2}px`;
-    this.xAxis.width =
-      (dimensions.width - this.margin.left - 20) * this.displayDensity;
-    this.xAxis.height = (this.margin.top / 2) * this.displayDensity;
-    this.xAxis.style.width = `${dimensions.width - this.margin.left - 20}px`;
-    this.xAxis.style.height = `${this.margin.top / 2}px`;
     this.xAxis.style.borderBottom = `1px solid black`;
 
     this.xAxisCtx = this.xAxis.getContext("2d")!;
@@ -166,7 +127,49 @@ export class CanvasRenderer implements Renderer {
       this.onScroll();
     });
 
+    this.resize(dimensions);
     this.setTransform();
+  }
+
+  resize(dimensions: { width: number; height: number }) {
+    this.wrapper.style.width = `${dimensions.width}px`;
+    this.wrapper.style.height = `${dimensions.height}px`;
+
+    this.canvas.width =
+      (dimensions.width - this.margin.left) * this.displayDensity;
+    this.canvas.height =
+      (dimensions.height - this.margin.top) * this.displayDensity;
+    this.canvas.style.width = `${dimensions.width - this.margin.left}px`;
+    this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
+
+    this.ySummary.width = (this.margin.left / 2) * this.displayDensity;
+    this.ySummary.height =
+      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+    this.ySummary.style.width = `${this.margin.left / 2}px`;
+    this.ySummary.style.height = `${dimensions.height -
+      this.margin.top -
+      20}px`;
+
+    this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
+    this.yAxis.height =
+      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+    this.yAxis.style.width = `${this.margin.left / 2}px`;
+    this.yAxis.style.height = `${dimensions.height - this.margin.top - 20}px`;
+    this.xSummary.width =
+      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+    this.xSummary.height = (this.margin.top / 2) * this.displayDensity;
+    this.xSummary.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xSummary.style.height = `${this.margin.top / 2}px`;
+
+    this.xAxis.width =
+      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+    this.xAxis.height = (this.margin.top / 2) * this.displayDensity;
+    this.xAxis.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xAxis.style.height = `${this.margin.top / 2}px`;
+
+    // We need to set font alignment after resize.
+    this.ctx.font = "normal normal 10px monospace";
+    this.ctx.textBaseline = "top";
   }
 
   private setTransform() {
