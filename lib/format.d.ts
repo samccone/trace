@@ -4,13 +4,13 @@ export interface TimelineEvent {
   // End time in miliseconds
   end: number;
   // End time - Start time in miliseconds
-  duration: number;
+  duration?: number;
   // Text label to be associated with the timeline entry
   label: string;
   // Process / Thread that the events are associated with.
   rowId: string;
   // Process / Thread index
-  row: number;
+  row?: number;
 
   facet?: string;
 }

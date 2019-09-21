@@ -1,18 +1,24 @@
 {
   "dependencies": {
-    "d3-scale": "3.1.0",
-    "typescript": "^3.6.2"
+    "d3-scale": "3.1.0"
   },
   "scripts": {
-    "dev": "parcel demo/index.html",
+    "dev": "webpack --mode=development --watch --config webpack.config.js",
+    "build": "webpack --mode=production --config webpack.config.js",
     "format": "prettier --write **/*.ts"
   },
   "devDependencies": {
-    "@types/d3-scale": "2.1.1",
+    "@types/d3-scale": "^2.1.1",
+    "@types/node": "^12.7.5",
     "husky": "^3.0.5",
-    "parcel-bundler": "^1.12.3",
+    "json-loader": "^0.5.7",
     "prettier": "^1.18.2",
-    "pretty-quick": "^1.11.1"
+    "pretty-quick": "^1.11.1",
+    "ts-loader": "^6.1.2",
+    "typescript": "^3.6.3",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.9",
+    "webpack-livereload-plugin": "^2.2.0"
   },
   "husky": {
     "hooks": {

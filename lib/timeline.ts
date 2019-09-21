@@ -2,19 +2,20 @@ import { Renderer, RenderOp } from "./renderers/renderer";
 import { TimelineEvents, TimelineEvent } from "./format";
 import { scaleLinear } from "d3-scale";
 
-const padNumbers = num => {
+const padNumbers = (num: number) => {
   const s = num + "";
   if (s.length === 1) return `0${s}`;
   return s;
 };
 
-const formatDate = d => {
+const formatDate = (d: Date) => {
   return `${padNumbers(d.getHours())}:${padNumbers(
     d.getMinutes()
   )}:${padNumbers(d.getSeconds())}`;
 };
 
 export class Timeline {
+  private dragging = false;
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
   private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
@@ -30,7 +31,7 @@ export class Timeline {
   }
 
   private setListeners() {
-    window.addEventListener("keydown", (e: Event) => {
+    window.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.code === "Space") {
         if (!this.dragging) {
           this.renderer.startDragging();
@@ -41,14 +42,14 @@ export class Timeline {
       }
     });
 
-    window.addEventListener("keyup", (e: Event) => {
+    window.addEventListener("keyup", (e: KeyboardEvent) => {
       if (e.code === "Space") {
         this.dragging = false;
         this.renderer.stopDragging();
       }
     });
 
-    window.addEventListener("pointermove", (e: Event) => {
+    window.addEventListener("pointermove", (e: any) => {
       this.lastMousePosition = { x: e.layerX, y: e.layerY };
 
       if (this.dragging && this.pointerDown) {
@@ -63,16 +64,16 @@ export class Timeline {
       }
     });
 
-    window.addEventListener("pointerdown", (e: Event) => {
+    window.onpointerdown = (e: any) => {
       this.pointerDown = true;
 
       if (this.dragging) {
         this.pointerDownPosition = { x: e.layerX, y: e.layerY };
         this.renderer.grab();
       }
-    });
+    };
 
-    window.addEventListener("pointerup", (e: Event) => {
+    window.addEventListener("pointerup", (_: PointerEvent) => {
       this.pointerDown = false;
       this.pointerDownPosition = null;
 
@@ -166,7 +167,7 @@ export class Timeline {
 
         const value = {
           x: xUnit(d.start),
-          y: yUnit(d.row) || 0,
+          y: yUnit(d.row || 0),
           width,
           height: BANDHEIGHT,
           fill: fillColor,
@@ -188,7 +189,7 @@ export class Timeline {
     const totalDuration = (xMax || 0) - (xMin || 0);
 
     const ySummary = Object.keys(rowMap).map((d, i) => {
-      const totalForRow = rowMap[d].reduce((p, c) => p + c.duration, 0);
+      const totalForRow = rowMap[d].reduce((p, c) => p + (c.duration || 0), 0);
       rowMap[d] = rowMap[d].sort((a, b) => a.start - b.start);
       return {
         index: parseInt(d),

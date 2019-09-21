@@ -1,5 +1,6 @@
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
+import { TimelineEvent, TimelineEvents } from "../lib/format";
 import { d } from "../data/data4";
 
 const elm = document.createElement("div");
@@ -10,7 +11,7 @@ const renderer = new CanvasRenderer(
 );
 const timeline = new Timeline(
   renderer,
-  d.map(v => {
+  (d as TimelineEvents).map((v: TimelineEvent) => {
     v.label = v.label.replace(`['/bin/bash', '-c'`, "");
     return v;
   }),

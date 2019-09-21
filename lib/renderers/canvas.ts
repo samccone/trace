@@ -43,7 +43,7 @@ export class CanvasRenderer implements Renderer {
       height: number;
       margin?: { top: number; left: number };
     },
-    public readonly target: Element
+    public readonly target: HTMLElement
   ) {
     this.margin = this.dimensions.margin || { top: 100, left: 100 };
 
@@ -200,10 +200,18 @@ export class CanvasRenderer implements Renderer {
   }
 
   private timelineWidth(): number {
+    if (this.lastOps == null) {
+      return 0;
+    }
+
     return this.lastOps.xMax * this.xScale();
   }
 
   private timelineHeight(): number {
+    if (this.lastOps == null) {
+      return 0;
+    }
+
     return this.lastOps.yMax * this.yScale();
   }
   private maxHeight(): number {
