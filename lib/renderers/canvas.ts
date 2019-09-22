@@ -386,7 +386,7 @@ export class CanvasRenderer implements Renderer {
 
     const yBrush: [number, number, number, number] = [
       0,
-      (this.ySummary.width / this.displayDensity) * offsetY,
+      (this.ySummary.height / this.displayDensity) * offsetY,
       this.ySummary.width / this.displayDensity,
       (this.ySummary.height / this.displayDensity) * shownY
     ];
