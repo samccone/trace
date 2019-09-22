@@ -24,13 +24,20 @@ const formatDate = (d: Date) => {
 export class Timeline {
   private dragging = false;
   private pointerDown = false;
-  private pointerDownPosition: { x: number; y: number } | null = null;
+  private pointerDownPosition: {
+    x: number;
+    y: number;
+    target: Element;
+  } | null = null;
   private startDraggingPosition: {
     x: number;
     y: number;
     target: Element;
   } | null = null;
-  private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
+  private lastMousePosition: { x: number; y: number; target?: Element } = {
+    x: 0,
+    y: 0
+  };
   private lastRenderOps: RenderInstructions | undefined;
 
   constructor(
@@ -45,45 +52,44 @@ export class Timeline {
 
   private setListeners() {
     window.addEventListener("pointermove", (e: any) => {
-      this.lastMousePosition = { x: e.layerX, y: e.layerY };
-      this.renderer.mouseMove(this.lastMousePosition);
-      if (this.dragging && this.pointerDown) {
-        if (this.pointerDownPosition == null) {
-          this.pointerDownPosition = { x: e.layerX, y: e.layerY };
+      const currentPosition = { x: e.layerX, y: e.layerY, target: e.target };
+      this.renderer.mouseMove(currentPosition);
+
+      if (this.pointerDown) {
+        if (!this.dragging) {
+          this.renderer.startDragging(this.pointerDownPosition);
+          this.dragging = true;
+          this.startDraggingPosition = this.pointerDownPosition;
+          this.renderer.grab();
+        }
+
+        if (this.lastMousePosition == null) {
+          this.lastMousePosition = { x: e.layerX, y: e.layerY };
         } else {
-          const x = this.pointerDownPosition.x - e.layerX;
-          const y = this.pointerDownPosition.y - e.layerY;
+          const x = this.lastMousePosition.x - e.layerX;
+          const y = this.lastMousePosition.y - e.layerY;
           this.renderer.drag({ x, y }, this.startDraggingPosition);
-          this.pointerDownPosition = { x: e.layerX, y: e.layerY };
         }
       }
+      this.lastMousePosition = currentPosition;
     });
 
-    window.addEventListener("click", (e: any) => {
-      const position = { x: e.layerX, y: e.layerY, target: e.target };
-      this.renderer.click(position);
-    });
-
-    window.onpointerdown = (e: any) => {
+    window.addEventListener("pointerdown", (e: any) => {
       this.pointerDown = true;
-      const position = { x: e.layerX, y: e.layerY, target: e.target };
-
-      if (!this.dragging) {
-        this.renderer.startDragging();
-        this.dragging = true;
-        this.startDraggingPosition = position;
-      } else if (this.dragging) {
-        this.pointerDownPosition = position;
-        this.renderer.grab();
-      }
-    };
+      this.pointerDownPosition = { x: e.layerX, y: e.layerY, target: e.target };
+    });
 
     window.addEventListener("pointerup", (_: PointerEvent) => {
+      if (!this.dragging && this.pointerDownPosition) {
+        this.renderer.click(this.pointerDownPosition);
+      } else if (this.dragging) {
+        this.dragging = false;
+        this.renderer.stopDragging();
+        this.startDraggingPosition = null;
+      }
+
       this.pointerDown = false;
       this.pointerDownPosition = null;
-      this.startDraggingPosition = null;
-      this.dragging = false;
-      this.renderer.stopDragging();
     });
 
     window.addEventListener(

@@ -14,18 +14,25 @@ export class CanvasRenderer implements Renderer {
   private overflowElm: HTMLElement;
   private axes: HTMLElement;
   private ySummary: HTMLCanvasElement;
+  private validYBrush: Boolean;
+
   private ySummaryY: ScaleLinear<number, number>;
   private ySummaryX: ScaleLinear<number, number>;
 
   private ySummaryCtx: CanvasRenderingContext2D;
   private yAxis: HTMLCanvasElement;
   private yAxisCtx: CanvasRenderingContext2D;
+
   private xSummary: HTMLCanvasElement;
+  private validXBrush: Boolean;
+
   private xSummaryCtx: CanvasRenderingContext2D;
   private xSummaryY: ScaleLinear<number, number>;
   private xSummaryX: ScaleLinear<number, number>;
+
   private xAxis: HTMLCanvasElement;
   private xAxisCtx: CanvasRenderingContext2D;
+
   private marginWrapper: HTMLElement;
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
@@ -72,6 +79,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.className = "ySummary";
     this.ySummary.style.position = "fixed";
     this.ySummary.style.top = `${this.margin.top}px`;
+    this.validYBrush = false;
 
     this.ySummary.style.border = `1px solid #cccccc`;
     this.ySummary.style.borderRight = `1px solid black`;
@@ -99,6 +107,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.className = "xSummary";
     this.xSummary.style.position = "fixed";
     this.xSummary.style.left = `${this.margin.left}px`;
+    this.validXBrush = false;
 
     this.xSummary.style.border = `1px solid #cccccc`;
     this.xSummary.style.borderBottom = `1px solid black`;
@@ -269,6 +278,57 @@ export class CanvasRenderer implements Renderer {
     return this.margin.left + this.margin.right + this.timelineWidth();
   }
 
+  private ySummaryBrushRange(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rect: [number, number, number, number];
+  } {
+    const shownY = Math.min(1, this.canvas.height / this.timelineHeight());
+    const offsetY = this.wrapper.scrollTop / this.timelineHeight();
+
+    const rect: [number, number, number, number] = [
+      0,
+      (this.ySummary.height / this.displayDensity) * offsetY,
+      this.ySummary.width / this.displayDensity,
+      (this.ySummary.height / this.displayDensity) * shownY
+    ];
+
+    return {
+      x: rect[0],
+      y: rect[1],
+      width: rect[2],
+      height: rect[3],
+      rect
+    };
+  }
+  private xSummaryBrushRange(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rect: [number, number, number, number];
+  } {
+    const shownX = Math.min(1, this.canvas.width / this.timelineWidth());
+    const offsetX = this.wrapper.scrollLeft / this.timelineWidth();
+
+    const rect: [number, number, number, number] = [
+      (this.xSummary.width / this.displayDensity) * offsetX,
+      0,
+      (this.xSummary.width / this.displayDensity) * shownX,
+      this.xSummary.height / this.displayDensity
+    ];
+
+    return {
+      x: rect[0],
+      y: rect[1],
+      width: rect[2],
+      height: rect[3],
+      rect
+    };
+  }
+
   private clearAll() {
     this.ctx.resetTransform();
     this.yAxisCtx.resetTransform();
@@ -382,18 +442,11 @@ export class CanvasRenderer implements Renderer {
       }
     }
 
-    const shownY = Math.min(1, this.canvas.height / this.timelineHeight());
-    const offsetY = this.wrapper.scrollTop / this.timelineHeight();
-
     this.ySummaryCtx.strokeStyle = "blue";
     this.ySummaryCtx.fillStyle = "rgba(0,0,255,.1)";
+    const yBrushCoords = this.ySummaryBrushRange();
 
-    const yBrush: [number, number, number, number] = [
-      0,
-      (this.ySummary.height / this.displayDensity) * offsetY,
-      this.ySummary.width / this.displayDensity,
-      (this.ySummary.height / this.displayDensity) * shownY
-    ];
+    const yBrush: [number, number, number, number] = yBrushCoords.rect;
 
     this.ySummaryCtx.strokeRect(...yBrush);
     this.ySummaryCtx.fillRect(...yBrush);
@@ -431,17 +484,11 @@ export class CanvasRenderer implements Renderer {
       }
     }
 
-    const shownX = Math.min(1, this.canvas.width / this.timelineWidth());
-    const offsetX = this.wrapper.scrollLeft / this.timelineWidth();
-
     this.xSummaryCtx.strokeStyle = "blue";
     this.xSummaryCtx.fillStyle = "rgba(0,0,255,.1)";
-    const xBrush: [number, number, number, number] = [
-      (this.xSummary.width / this.displayDensity) * offsetX,
-      0,
-      (this.xSummary.width / this.displayDensity) * shownX,
-      this.xSummary.height / this.displayDensity
-    ];
+    const xBrushCoords = this.xSummaryBrushRange();
+
+    const xBrush: [number, number, number, number] = xBrushCoords.rect;
     this.xSummaryCtx.strokeRect(...xBrush);
     this.xSummaryCtx.fillRect(...xBrush);
   }
@@ -495,19 +542,21 @@ export class CanvasRenderer implements Renderer {
     this.zoom({ changeAmount: -ZOOM_AMOUNT, mousePosition });
   }
 
-  startDragging() {
-    this.target.style.cursor = "grab";
-  }
-
-  grab() {
-    this.target.style.cursor = "grabbing";
-  }
-
   click({ x, y, target }: { x: number; y: number; target: HTMLCanvasElement }) {
     if (target === this.ySummary) {
-      console.log("in y summary");
+      this.wrapper.scrollTo(
+        this.wrapper.scrollLeft,
+        (this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
+          this.timelineHeight() -
+          this.canvas.height / 2
+      );
     } else if (target === this.xSummary) {
-      console.log("in x Summary");
+      this.wrapper.scrollTo(
+        (this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
+          this.timelineWidth() -
+          this.canvas.width / 2,
+        this.wrapper.scrollTop
+      );
     } else {
       const wrapperX = x * this.displayDensity - this.margin.left;
       const wrapperY = y * this.displayDensity - this.margin.top;
@@ -529,8 +578,38 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
+  grab() {
+    this.target.style.cursor = "grabbing";
+  }
+
+  startDragging({
+    x,
+    y,
+    target
+  }: {
+    x: number;
+    y: number;
+    target: HTMLCanvasElement;
+  }) {
+    this.target.style.cursor = "grab";
+
+    if (target === this.ySummary) {
+      const yBrushCoords = this.ySummaryBrushRange();
+      if (y >= yBrushCoords.y && y <= yBrushCoords.y + yBrushCoords.height) {
+        this.validYBrush = true;
+      }
+    } else if (target === this.xSummary) {
+      const xBrushCoords = this.xSummaryBrushRange();
+      if (x >= xBrushCoords.x && x <= xBrushCoords.x + xBrushCoords.width) {
+        this.validXBrush = true;
+      }
+    }
+  }
+
   stopDragging() {
     this.target.style.cursor = "initial";
+    this.validYBrush = false;
+    this.validXBrush = false;
   }
 
   drag(
@@ -538,21 +617,21 @@ export class CanvasRenderer implements Renderer {
     start: { x: number; y: number; target: HTMLCanvasElement } | null
   ) {
     if (start && start.target === this.ySummary) {
-      this.wrapper.scrollBy(
-        0,
-        -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
-          this.timelineHeight()
-      );
+      if (this.validYBrush) {
+        this.wrapper.scrollBy(
+          0,
+          -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
+            this.timelineHeight()
+        );
+      }
     } else if (start && start.target === this.xSummary) {
-      //TODO: add in checks that you're over the selected range
-
-      //TODO: add in on click handling for brush
-
-      this.wrapper.scrollBy(
-        -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
-          this.timelineWidth(),
-        0
-      );
+      if (this.validXBrush) {
+        this.wrapper.scrollBy(
+          -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
+            this.timelineWidth(),
+          0
+        );
+      }
     } else {
       this.wrapper.scrollBy(x, y);
     }
