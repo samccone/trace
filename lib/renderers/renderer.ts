@@ -30,4 +30,6 @@ export abstract class Renderer {
     y: number;
     target: Element;
   }): void;
+
+  abstract mouseMove(mousePosition: { x: number; y: number }): void;
 }

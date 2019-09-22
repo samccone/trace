@@ -2,7 +2,7 @@ export function binarySearch<
   K extends { start: number; end: number },
   T extends K[]
 >(value: number, values: T): K | undefined {
-  if (values.length === 0) {
+  if (values == null || values.length === 0) {
     return undefined;
   }
 

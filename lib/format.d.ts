@@ -16,6 +16,9 @@ export interface RenderOp {
     text?: string;
   };
   fill: string;
+
+  // Internal ID for Event tracking [shared with TimelineEvent]
+  uuid: string;
 }
 
 export interface RenderInstructions {
@@ -44,6 +47,9 @@ export interface TimelineEvent {
   row?: number;
 
   facet?: string;
+
+  // Internal ID for Event tracking [Shared with RenderOp]
+  uuid: string;
 }
 
 export type TimelineEvents = TimelineEvent[];

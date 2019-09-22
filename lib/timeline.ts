@@ -7,6 +7,7 @@ import {
   RowMap
 } from "./format";
 import { scaleLinear } from "d3-scale";
+import { uuid } from "./uuid";
 
 const padNumbers = (num: number) => {
   const s = num + "";
@@ -45,6 +46,7 @@ export class Timeline {
   private setListeners() {
     window.addEventListener("pointermove", (e: any) => {
       this.lastMousePosition = { x: e.layerX, y: e.layerY };
+      this.renderer.mouseMove(this.lastMousePosition);
       if (this.dragging && this.pointerDown) {
         if (this.pointerDownPosition == null) {
           this.pointerDownPosition = { x: e.layerX, y: e.layerY };
@@ -108,7 +110,7 @@ export class Timeline {
     let rows: string[] = [];
     let rowMap: RowMap = {};
 
-    data.forEach(d => {
+    data = data.map(d => {
       if (!xMin || d.start < xMin) {
         xMin = d.start;
       }
@@ -124,6 +126,7 @@ export class Timeline {
       }
       const r = rows.indexOf(d.rowId + "");
       d.row = r;
+      d.uuid = uuid();
 
       const stringR = r + "";
       if (!rowMap[stringR]) {
@@ -138,6 +141,8 @@ export class Timeline {
       ) {
         facets.push(d.facet);
       }
+
+      return d;
     });
 
     const sortedData = data.sort((a, b) => {
@@ -171,6 +176,7 @@ export class Timeline {
           x: xUnit(d.start),
           y: yUnit(d.row || 0),
           width,
+          uuid: d.uuid,
           height: BANDHEIGHT,
           fill: fillColor,
           text: {

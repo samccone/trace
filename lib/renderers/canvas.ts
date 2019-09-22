@@ -1,5 +1,5 @@
 import { Renderer } from "./renderer";
-import { RenderInstructions } from "../format";
+import { RenderInstructions, TimelineEvent } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
 
@@ -32,6 +32,7 @@ export class CanvasRenderer implements Renderer {
   private lastOps?: RenderInstructions;
   private zoomLevel: number = 0;
   private margin: { top: number; left: number; right: number };
+  private activeUUID: string | undefined;
 
   constructor(
     public dimensions: {
@@ -139,6 +140,25 @@ export class CanvasRenderer implements Renderer {
 
     this.resize(dimensions);
     this.setTransform();
+  }
+
+  private toTimelinePosition({
+    x,
+    y
+  }: {
+    x: number;
+    y: number;
+  }): { x: number; y: number } {
+    const wrapperX = x * this.displayDensity - this.margin.left;
+    const wrapperY = y * this.displayDensity - this.margin.top;
+
+    const timelineX = wrapperX + this.wrapper.scrollLeft;
+    const timelineY = wrapperY + this.wrapper.scrollTop;
+
+    return {
+      x: timelineX,
+      y: timelineY
+    };
   }
 
   resize(dimensions: { width: number; height: number }) {
@@ -303,7 +323,12 @@ export class CanvasRenderer implements Renderer {
     const fontSize = parseInt(this.ctx.font);
 
     for (const opt of instructions.opts) {
-      this.ctx.fillStyle = opt.fill;
+      if (this.activeUUID === opt.uuid) {
+        this.ctx.fillStyle = "red";
+      } else {
+        this.ctx.fillStyle = opt.fill;
+      }
+
       this.ctx.fillRect(
         opt.x - transformScrollX,
         opt.y - transformScrollY,
@@ -500,7 +525,6 @@ export class CanvasRenderer implements Renderer {
       const match = binarySearch(timestamp, this.lastOps!.rowMap[row]!);
 
       if (match != null) {
-        console.log(match);
       }
     }
   }
@@ -531,6 +555,32 @@ export class CanvasRenderer implements Renderer {
       );
     } else {
       this.wrapper.scrollBy(x, y);
+    }
+  }
+
+  mouseMove(mousePosition: { x: number; y: number }) {
+    if (this.lastOps == null) {
+      return;
+    }
+
+    const { x, y } = this.toTimelinePosition(mousePosition);
+
+    const row = Math.floor(this.lastOps.yUnit.invert(y));
+    const timestamp = this.lastOps.xUnit.invert(x);
+    const match: TimelineEvent | undefined = binarySearch(
+      timestamp,
+      this.lastOps.rowMap[row]!
+    );
+
+    if (match == null && this.activeUUID != null) {
+      this.activeUUID = undefined;
+      this.render(this.lastOps);
+      return;
+    }
+
+    if (match != null && match.uuid !== this.activeUUID) {
+      this.activeUUID = match.uuid;
+      this.render(this.lastOps);
     }
   }
 
