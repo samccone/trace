@@ -20,9 +20,9 @@ export abstract class Renderer {
 
   abstract stopDragging(): void;
 
-  abstract scrollBy(
+  abstract drag(
     by: { x: number; y: number },
-    start: { x: number; y: number } | null
+    start: { x: number; y: number; target: Element } | null
   ): void;
 
   abstract onClick(mousePosition: { x: number; y: number }): void;

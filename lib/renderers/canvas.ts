@@ -503,16 +503,26 @@ export class CanvasRenderer implements Renderer {
     this.target.style.cursor = "initial";
   }
 
-  scrollBy(
+  drag(
     { x, y }: { x: number; y: number },
-    start: { x: number; y: number } | null
+    start: { x: number; y: number; target: HTMLCanvasElement } | null
   ) {
-    // console.log(start);
-    if (
-      start &&
-      (start.x < this.margin.left / 2 && start.y > this.margin.top)
-    ) {
-      console.log(x, this.ySummaryY.invert(x));
+    if (start && start.target === this.ySummary) {
+      this.wrapper.scrollBy(
+        0,
+        -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
+          this.timelineHeight()
+      );
+    } else if (start && start.target === this.xSummary) {
+      //TODO: add in checks that you're over the selected range
+
+      //TODO: add in on click handling for brush
+
+      this.wrapper.scrollBy(
+        -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
+          this.timelineWidth(),
+        0
+      );
     } else {
       this.wrapper.scrollBy(x, y);
     }

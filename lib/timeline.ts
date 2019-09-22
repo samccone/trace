@@ -24,7 +24,11 @@ export class Timeline {
   private dragging = false;
   private pointerDown = false;
   private pointerDownPosition: { x: number; y: number } | null = null;
-  private startDraggingPosition: { x: number; y: number } | null = null;
+  private startDraggingPosition: {
+    x: number;
+    y: number;
+    target: Element;
+  } | null = null;
   private lastMousePosition: { x: number; y: number } = { x: 0, y: 0 };
   private lastRenderOps: RenderInstructions | undefined;
 
@@ -47,7 +51,7 @@ export class Timeline {
         } else {
           const x = this.pointerDownPosition.x - e.layerX;
           const y = this.pointerDownPosition.y - e.layerY;
-          this.renderer.scrollBy({ x, y }, this.startDraggingPosition);
+          this.renderer.drag({ x, y }, this.startDraggingPosition);
           this.pointerDownPosition = { x: e.layerX, y: e.layerY };
         }
       }
@@ -61,7 +65,7 @@ export class Timeline {
 
     window.onpointerdown = (e: any) => {
       this.pointerDown = true;
-      const position = { x: e.layerX, y: e.layerY };
+      const position = { x: e.layerX, y: e.layerY, target: e.target };
 
       if (!this.dragging) {
         this.renderer.startDragging();
