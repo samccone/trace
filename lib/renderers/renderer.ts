@@ -25,5 +25,9 @@ export abstract class Renderer {
     start: { x: number; y: number; target: Element } | null
   ): void;
 
-  abstract onClick(mousePosition: { x: number; y: number }): void;
+  abstract click(mousePosition: {
+    x: number;
+    y: number;
+    target: Element;
+  }): void;
 }

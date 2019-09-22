@@ -141,27 +141,6 @@ export class CanvasRenderer implements Renderer {
     this.setTransform();
   }
 
-  onClick({ x, y }: { x: number; y: number }) {
-    const wrapperX = x * this.displayDensity - this.margin.left;
-    const wrapperY = y * this.displayDensity - this.margin.top;
-
-    if (wrapperX < 0 || wrapperY < 0) {
-      // skip
-      return;
-    }
-
-    const timelineX = wrapperX + this.wrapper.scrollLeft;
-    const timelineY = wrapperY + this.wrapper.scrollTop;
-
-    const row = Math.floor(this.lastOps!.yUnit.invert(timelineY));
-    const timestamp = this.lastOps!.xUnit.invert(timelineX);
-    const match = binarySearch(timestamp, this.lastOps!.rowMap[row]!);
-
-    if (match != null) {
-      console.log(match);
-    }
-  }
-
   resize(dimensions: { width: number; height: number }) {
     this.clearAll();
     this.dimensions = { ...this.dimensions, ...dimensions };
@@ -497,6 +476,33 @@ export class CanvasRenderer implements Renderer {
 
   grab() {
     this.target.style.cursor = "grabbing";
+  }
+
+  click({ x, y, target }: { x: number; y: number; target: HTMLCanvasElement }) {
+    if (target === this.ySummary) {
+      console.log("in y summary");
+    } else if (target === this.xSummary) {
+      console.log("in x Summary");
+    } else {
+      const wrapperX = x * this.displayDensity - this.margin.left;
+      const wrapperY = y * this.displayDensity - this.margin.top;
+
+      if (wrapperX < 0 || wrapperY < 0) {
+        // skip
+        return;
+      }
+
+      const timelineX = wrapperX + this.wrapper.scrollLeft;
+      const timelineY = wrapperY + this.wrapper.scrollTop;
+
+      const row = Math.floor(this.lastOps!.yUnit.invert(timelineY));
+      const timestamp = this.lastOps!.xUnit.invert(timelineX);
+      const match = binarySearch(timestamp, this.lastOps!.rowMap[row]!);
+
+      if (match != null) {
+        console.log(match);
+      }
+    }
   }
 
   stopDragging() {

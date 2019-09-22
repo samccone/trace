@@ -58,9 +58,8 @@ export class Timeline {
     });
 
     window.addEventListener("click", (e: any) => {
-      const position = { x: e.layerX, y: e.layerY };
-
-      this.renderer.onClick(position);
+      const position = { x: e.layerX, y: e.layerY, target: e.target };
+      this.renderer.click(position);
     });
 
     window.onpointerdown = (e: any) => {
