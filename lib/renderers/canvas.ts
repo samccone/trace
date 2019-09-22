@@ -37,7 +37,7 @@ export class CanvasRenderer implements Renderer {
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
   private lastOps?: RenderInstructions;
-  private zoomLevel: number = 0;
+  private zoomLevel: number = 0.0;
   private margin: { top: number; left: number; right: number };
   private activeUUID: string | undefined;
 
@@ -151,25 +151,6 @@ export class CanvasRenderer implements Renderer {
     this.setTransform();
   }
 
-  private toTimelinePosition({
-    x,
-    y
-  }: {
-    x: number;
-    y: number;
-  }): { x: number; y: number } {
-    const wrapperX = x * this.displayDensity - this.margin.left;
-    const wrapperY = y * this.displayDensity - this.margin.top;
-
-    const timelineX = wrapperX + this.wrapper.scrollLeft;
-    const timelineY = wrapperY + this.wrapper.scrollTop;
-
-    return {
-      x: timelineX,
-      y: timelineY
-    };
-  }
-
   resize(dimensions: { width: number; height: number }) {
     this.clearAll();
     this.dimensions = { ...this.dimensions, ...dimensions };
@@ -227,19 +208,19 @@ export class CanvasRenderer implements Renderer {
 
   private setTransform() {
     this.ctx.resetTransform();
-    this.ctx.scale(this.xScale(), this.yScale());
+    this.ctx.scale(this.scale(), this.scale());
 
     this.ySummaryCtx.resetTransform();
-    this.ySummaryCtx.scale(this.xScale(), this.yScale());
+    this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.xSummaryCtx.resetTransform();
-    this.xSummaryCtx.scale(this.xScale(), this.yScale());
+    this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.yAxisCtx.resetTransform();
-    this.yAxisCtx.scale(1, this.yScale());
+    this.yAxisCtx.scale(this.displayDensity, this.scale());
 
     this.xAxisCtx.resetTransform();
-    this.xAxisCtx.scale(this.xScale(), 1);
+    this.xAxisCtx.scale(this.scale(), this.displayDensity);
   }
 
   onScroll() {
@@ -253,12 +234,34 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  private xScale() {
+  private scale() {
     return this.displayDensity + this.zoomLevel;
   }
 
-  private yScale() {
-    return this.displayDensity + this.zoomLevel;
+  private timelineMouse({ x, y }) {
+    return {
+      x: Math.max(0, x - this.margin.left),
+      y: Math.max(0, y - this.margin.top)
+    };
+  }
+
+  private toTimelinePosition({
+    x,
+    y
+  }: {
+    x: number;
+    y: number;
+  }): { x: number; y: number } {
+    const timelineMouse = this.timelineMouse({ x, y });
+
+    const s = this.displayDensity;
+    const timelineX = s * timelineMouse.x + this.wrapper.scrollLeft;
+    const timelineY = s * timelineMouse.y + this.wrapper.scrollTop;
+
+    return {
+      x: timelineX,
+      y: timelineY
+    };
   }
 
   private timelineWidth(): number {
@@ -266,7 +269,7 @@ export class CanvasRenderer implements Renderer {
       return 0;
     }
 
-    return this.lastOps.xMax * this.xScale();
+    return this.lastOps.xMax * this.scale();
   }
 
   private timelineHeight(): number {
@@ -274,7 +277,7 @@ export class CanvasRenderer implements Renderer {
       return 0;
     }
 
-    return this.lastOps.yMax * this.yScale();
+    return this.lastOps.yMax * this.scale();
   }
   private maxHeight(): number {
     return this.margin.top + this.timelineHeight();
@@ -384,8 +387,8 @@ export class CanvasRenderer implements Renderer {
 
     this.setTransform();
 
-    const transformScrollX = this.scrollOffset.x / this.xScale();
-    const transformScrollY = this.scrollOffset.y / this.yScale();
+    const transformScrollX = this.scrollOffset.x / this.scale();
+    const transformScrollY = this.scrollOffset.y / this.scale();
     const fontSize = parseInt(this.ctx.font);
 
     for (const opt of instructions.opts) {
@@ -527,7 +530,7 @@ export class CanvasRenderer implements Renderer {
 
     const originalZoomLevel = this.zoomLevel;
     this.zoomLevel += changeAmount;
-    if (this.xScale() <= MIN_ZOOM || this.yScale() <= MIN_ZOOM) {
+    if (this.scale() <= MIN_ZOOM || this.scale() <= MIN_ZOOM) {
       this.zoomLevel = originalZoomLevel;
       return;
     }
@@ -644,16 +647,15 @@ export class CanvasRenderer implements Renderer {
   }
 
   mouseMove(mousePosition: { x: number; y: number }) {
-    console.log(mousePosition, this);
-
     if (this.lastOps == null) {
       return;
     }
 
     const { x, y } = this.toTimelinePosition(mousePosition);
 
-    const row = Math.floor(this.lastOps.yUnit.invert(y));
-    const timestamp = this.lastOps.xUnit.invert(x);
+    const row = Math.floor(this.lastOps.yUnit.invert(y / this.scale()));
+    const timestamp = this.lastOps.xUnit.invert(x / this.scale());
+
     const match: TimelineEvent | undefined = binarySearch(
       timestamp,
       this.lastOps.rowMap[row]!
