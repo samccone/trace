@@ -31,17 +31,17 @@ export class CanvasRenderer implements Renderer {
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
   private lastOps?: RenderInstructions;
   private zoomLevel: number = 0;
-  private margin: { top: number; left: number };
+  private margin: { top: number; left: number; right: number };
 
   constructor(
     public dimensions: {
       width: number;
       height: number;
-      margin?: { top: number; left: number };
+      margin?: { top: number; left: number; right: number };
     },
     public readonly target: HTMLElement
   ) {
-    this.margin = this.dimensions.margin || { top: 100, left: 100 };
+    this.margin = this.dimensions.margin || { top: 100, left: 100, right: 200 };
 
     this.overflowElm = document.createElement("div");
     this.overflowElm.style.width = "1px";
@@ -169,40 +169,47 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.height = `${dimensions.height}px`;
 
     this.canvas.width =
-      (dimensions.width - this.margin.left) * this.displayDensity;
+      (dimensions.width - this.margin.left - this.margin.right) *
+      this.displayDensity;
     this.canvas.height =
       (dimensions.height - this.margin.top) * this.displayDensity;
-    this.canvas.style.width = `${dimensions.width - this.margin.left}px`;
+    this.canvas.style.width = `${dimensions.width -
+      this.margin.left -
+      this.margin.right}px`;
     this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
 
     this.ySummary.width = (this.margin.left / 2) * this.displayDensity;
     this.ySummary.height =
-      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+      (dimensions.height - this.margin.top) * this.displayDensity;
     this.ySummary.style.width = `${this.margin.left / 2}px`;
-    this.ySummary.style.height = `${dimensions.height -
-      this.margin.top -
-      20}px`;
+    this.ySummary.style.height = `${dimensions.height - this.margin.top}px`;
     this.ySummaryY.range([0, this.ySummary.height / this.displayDensity]);
     this.ySummaryX.range([0, this.ySummary.width / this.displayDensity]);
 
     this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
     this.yAxis.height =
-      (dimensions.height - this.margin.top - 20) * this.displayDensity;
+      (dimensions.height - this.margin.top) * this.displayDensity;
     this.yAxis.style.width = `${this.margin.left / 2}px`;
-    this.yAxis.style.height = `${dimensions.height - this.margin.top - 20}px`;
+    this.yAxis.style.height = `${dimensions.height - this.margin.top}px`;
 
     this.xSummary.width =
-      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+      (dimensions.width - this.margin.left - this.margin.right) *
+      this.displayDensity;
     this.xSummary.height = (this.margin.top / 2) * this.displayDensity;
-    this.xSummary.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xSummary.style.width = `${dimensions.width -
+      this.margin.left -
+      this.margin.right}px`;
     this.xSummary.style.height = `${this.margin.top / 2}px`;
     this.xSummaryY.range([0, this.xSummary.height / this.displayDensity]);
     this.xSummaryX.range([0, this.xSummary.width / this.displayDensity]);
 
     this.xAxis.width =
-      (dimensions.width - this.margin.left - 20) * this.displayDensity;
+      (dimensions.width - this.margin.left - this.margin.right) *
+      this.displayDensity;
     this.xAxis.height = (this.margin.top / 2) * this.displayDensity;
-    this.xAxis.style.width = `${dimensions.width - this.margin.left - 20}px`;
+    this.xAxis.style.width = `${dimensions.width -
+      this.margin.left -
+      this.margin.right}px`;
     this.xAxis.style.height = `${this.margin.top / 2}px`;
 
     // We need to set font alignment after resize.
@@ -256,11 +263,11 @@ export class CanvasRenderer implements Renderer {
     return this.lastOps.yMax * this.yScale();
   }
   private maxHeight(): number {
-    return this.margin.left + this.timelineHeight();
+    return this.margin.top + this.timelineHeight();
   }
 
   private maxWidth(): number {
-    return this.margin.top + this.timelineWidth();
+    return this.margin.left + this.margin.right + this.timelineWidth();
   }
 
   private clearAll() {
@@ -448,7 +455,9 @@ export class CanvasRenderer implements Renderer {
 
     const viewportMouseX = Math.max(
       0,
-      mousePosition.x * this.displayDensity - this.margin.left
+      mousePosition.x * this.displayDensity -
+        this.margin.left -
+        this.margin.right
     );
     const viewportMouseY = Math.max(
       0,
