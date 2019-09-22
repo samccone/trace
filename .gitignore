@@ -6,3 +6,4 @@ dist/*
 tsconfig.tsbuildinfo
 node_modules/
 data/
+.DS_Store
