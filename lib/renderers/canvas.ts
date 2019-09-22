@@ -85,7 +85,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.style.borderRight = `1px solid black`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
-    this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
+    // this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
     this.ySummaryY = scaleLinear();
     this.ySummaryX = scaleLinear().domain([1, 0]);
 
@@ -113,7 +113,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.style.borderBottom = `1px solid black`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
-    this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
+    // this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
     this.xSummaryY = scaleLinear().domain([1, 0]);
     this.xSummaryX = scaleLinear();
 
@@ -192,7 +192,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.style.width = `${this.margin.left / 2}px`;
     this.ySummary.style.height = `${dimensions.height - this.margin.top}px`;
     this.ySummaryY.range([0, this.ySummary.height / this.displayDensity]);
-    this.ySummaryX.range([0, this.ySummary.width / this.displayDensity]);
+    this.ySummaryX.range([0, this.ySummary.width]);
 
     this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
     this.yAxis.height =
@@ -208,7 +208,7 @@ export class CanvasRenderer implements Renderer {
       this.margin.left -
       this.margin.right}px`;
     this.xSummary.style.height = `${this.margin.top / 2}px`;
-    this.xSummaryY.range([0, this.xSummary.height / this.displayDensity]);
+    this.xSummaryY.range([0, this.xSummary.height]);
     this.xSummaryX.range([0, this.xSummary.width / this.displayDensity]);
 
     this.xAxis.width =
@@ -228,6 +228,12 @@ export class CanvasRenderer implements Renderer {
   private setTransform() {
     this.ctx.resetTransform();
     this.ctx.scale(this.xScale(), this.yScale());
+
+    this.ySummaryCtx.resetTransform();
+    this.ySummaryCtx.scale(this.xScale(), this.yScale());
+
+    this.xSummaryCtx.resetTransform();
+    this.xSummaryCtx.scale(this.xScale(), this.yScale());
 
     this.yAxisCtx.resetTransform();
     this.yAxisCtx.scale(1, this.yScale());
@@ -351,7 +357,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummaryCtx.clearRect(
       0,
       0,
-      this.xAxis.width * this.displayDensity * 1,
+      this.xAxis.width * this.displayDensity,
       this.xAxis.height * this.displayDensity
     );
 
@@ -365,7 +371,7 @@ export class CanvasRenderer implements Renderer {
     this.xAxisCtx.clearRect(
       0,
       0,
-      this.xAxis.width * this.displayDensity * 1,
+      this.xAxis.width * this.displayDensity,
       this.xAxis.height * this.displayDensity
     );
   }
@@ -638,6 +644,8 @@ export class CanvasRenderer implements Renderer {
   }
 
   mouseMove(mousePosition: { x: number; y: number }) {
+    console.log(mousePosition, this);
+
     if (this.lastOps == null) {
       return;
     }
