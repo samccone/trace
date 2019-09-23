@@ -515,9 +515,7 @@ export class CanvasRenderer implements Renderer {
 
     const viewportMouseX = Math.max(
       0,
-      mousePosition.x * this.displayDensity -
-        this.margin.left -
-        this.margin.right
+      mousePosition.x * this.displayDensity - this.margin.left
     );
     const viewportMouseY = Math.max(
       0,
