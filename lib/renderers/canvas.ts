@@ -513,18 +513,11 @@ export class CanvasRenderer implements Renderer {
       return;
     }
 
-    const viewportMouseX = Math.max(
-      0,
-      mousePosition.x * this.displayDensity - this.margin.left
-    );
-    const viewportMouseY = Math.max(
-      0,
-      mousePosition.y * this.displayDensity - this.margin.top
-    );
-    const timelineXPercent =
-      (viewportMouseX + this.wrapper.scrollLeft) / this.timelineWidth();
-    const timelineYPercent =
-      (viewportMouseY + this.wrapper.scrollTop) / this.timelineHeight();
+    const originalScrollLeft = this.wrapper.scrollLeft;
+    const originalScrollTop = this.wrapper.scrollTop;
+    const { x, y } = this.toTimelinePosition(mousePosition);
+    const timelineXPercent = x / this.timelineWidth();
+    const timelineYPercent = y / this.timelineHeight();
 
     const originalZoomLevel = this.zoomLevel;
     this.zoomLevel += changeAmount;
@@ -534,8 +527,8 @@ export class CanvasRenderer implements Renderer {
     }
 
     this.wrapper.scrollTo(
-      timelineXPercent * this.timelineWidth() - viewportMouseX,
-      timelineYPercent * this.timelineHeight() - viewportMouseY
+      timelineXPercent * this.timelineWidth() - (x - originalScrollLeft),
+      timelineYPercent * this.timelineHeight() - (y - originalScrollTop)
     );
 
     this.render(this.lastOps);
