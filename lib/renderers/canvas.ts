@@ -238,7 +238,7 @@ export class CanvasRenderer implements Renderer {
     return this.displayDensity + this.zoomLevel;
   }
 
-  private timelineMouse({ x, y }) {
+  private timelineMouse({ x, y }: { x: number; y: number }) {
     return {
       x: Math.max(0, x - this.margin.left),
       y: Math.max(0, y - this.margin.top)
