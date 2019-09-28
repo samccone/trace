@@ -173,7 +173,7 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.style.width = `${this.margin.left / 2}px`;
     this.ySummary.style.height = `${dimensions.height - this.margin.top}px`;
     this.ySummaryY.range([0, this.ySummary.height / this.displayDensity]);
-    this.ySummaryX.range([0, this.ySummary.width]);
+    this.ySummaryX.range([0, this.ySummary.width / this.displayDensity]);
 
     this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
     this.yAxis.height =
@@ -189,7 +189,7 @@ export class CanvasRenderer implements Renderer {
       this.margin.left -
       this.margin.right}px`;
     this.xSummary.style.height = `${this.margin.top / 2}px`;
-    this.xSummaryY.range([0, this.xSummary.height]);
+    this.xSummaryY.range([0, this.xSummary.height / this.displayDensity]);
     this.xSummaryX.range([0, this.xSummary.width / this.displayDensity]);
 
     this.xAxis.width =

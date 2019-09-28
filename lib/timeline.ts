@@ -214,7 +214,7 @@ export class Timeline {
       };
     });
 
-    const BUCKETS = 100;
+    const BUCKETS = 200;
     const increment = totalDuration / BUCKETS;
 
     const xSummary = [...new Array(BUCKETS)].map((_, bucket) => {
