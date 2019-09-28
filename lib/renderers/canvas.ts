@@ -59,7 +59,7 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.zIndex = "1";
     this.wrapper.style.position = "relative";
 
-    this.displayDensity = 2;
+    this.displayDensity = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d")!;
 
