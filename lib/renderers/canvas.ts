@@ -9,7 +9,6 @@ const MIN_ZOOM = 0.1;
 export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private displayDensity: number;
   private wrapper: HTMLElement;
   private summaryPane: HTMLElement;
 
@@ -40,7 +39,7 @@ export class CanvasRenderer implements Renderer {
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
   private lastOps?: RenderInstructions;
-  private zoomLevel: number = 0.0;
+  private zoomLevel: number = 1;
   private margin: { top: number; left: number; right: number };
   private activeUUID: string | undefined;
 
@@ -70,7 +69,6 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.zIndex = "1";
     this.wrapper.style.position = "relative";
 
-    this.displayDensity = window.devicePixelRatio;
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d")!;
 
@@ -167,45 +165,37 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.width = `${dimensions.width}px`;
     this.wrapper.style.height = `${dimensions.height}px`;
 
-    this.canvas.width =
-      (dimensions.width - this.margin.left - this.margin.right) *
-      this.displayDensity;
-    this.canvas.height =
-      (dimensions.height - this.margin.top) * this.displayDensity;
+    this.canvas.width = dimensions.width - this.margin.left - this.margin.right;
+    this.canvas.height = dimensions.height - this.margin.top;
     this.canvas.style.width = `${dimensions.width -
       this.margin.left -
       this.margin.right}px`;
     this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
 
-    this.ySummary.width = (this.margin.left / 2) * this.displayDensity;
-    this.ySummary.height =
-      (dimensions.height - this.margin.top) * this.displayDensity;
+    this.ySummary.width = this.margin.left / 2;
+    this.ySummary.height = dimensions.height - this.margin.top;
     this.ySummary.style.width = `${this.margin.left / 2}px`;
     this.ySummary.style.height = `${dimensions.height - this.margin.top}px`;
-    this.ySummaryY.range([0, this.ySummary.height / this.displayDensity]);
-    this.ySummaryX.range([0, this.ySummary.width / this.displayDensity]);
+    this.ySummaryY.range([0, this.ySummary.height]);
+    this.ySummaryX.range([0, this.ySummary.width]);
 
-    this.yAxis.width = (this.margin.left / 2) * this.displayDensity;
-    this.yAxis.height =
-      (dimensions.height - this.margin.top) * this.displayDensity;
+    this.yAxis.width = this.margin.left / 2;
+    this.yAxis.height = dimensions.height - this.margin.top;
     this.yAxis.style.width = `${this.margin.left / 2}px`;
     this.yAxis.style.height = `${dimensions.height - this.margin.top}px`;
 
     this.xSummary.width =
-      (dimensions.width - this.margin.left - this.margin.right) *
-      this.displayDensity;
-    this.xSummary.height = (this.margin.top / 2) * this.displayDensity;
+      dimensions.width - this.margin.left - this.margin.right;
+    this.xSummary.height = this.margin.top / 2;
     this.xSummary.style.width = `${dimensions.width -
       this.margin.left -
       this.margin.right}px`;
     this.xSummary.style.height = `${this.margin.top / 2}px`;
-    this.xSummaryY.range([0, this.xSummary.height / this.displayDensity]);
-    this.xSummaryX.range([0, this.xSummary.width / this.displayDensity]);
+    this.xSummaryY.range([0, this.xSummary.height]);
+    this.xSummaryX.range([0, this.xSummary.width]);
 
-    this.xAxis.width =
-      (dimensions.width - this.margin.left - this.margin.right) *
-      this.displayDensity;
-    this.xAxis.height = (this.margin.top / 2) * this.displayDensity;
+    this.xAxis.width = dimensions.width - this.margin.left - this.margin.right;
+    this.xAxis.height = this.margin.top / 2;
     this.xAxis.style.width = `${dimensions.width -
       this.margin.left -
       this.margin.right}px`;
@@ -221,22 +211,20 @@ export class CanvasRenderer implements Renderer {
     this.ctx.scale(this.scale(), this.scale());
 
     this.ySummaryCtx.resetTransform();
-    this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.xSummaryCtx.resetTransform();
-    this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
 
     this.yAxisCtx.resetTransform();
-    this.yAxisCtx.scale(this.displayDensity, this.scale());
+    this.yAxisCtx.scale(1, this.scale());
 
     this.xAxisCtx.resetTransform();
-    this.xAxisCtx.scale(this.scale(), this.displayDensity);
+    this.xAxisCtx.scale(this.scale(), 1);
   }
 
   onScroll() {
     this.scrollOffset = {
-      x: this.wrapper.scrollLeft * this.displayDensity,
-      y: this.wrapper.scrollTop * this.displayDensity
+      x: this.wrapper.scrollLeft,
+      y: this.wrapper.scrollTop
     };
 
     if (this.lastOps) {
@@ -245,7 +233,7 @@ export class CanvasRenderer implements Renderer {
   }
 
   private scale() {
-    return this.displayDensity + this.zoomLevel;
+    return this.zoomLevel;
   }
 
   private toTimelinePosition({
@@ -260,9 +248,8 @@ export class CanvasRenderer implements Renderer {
       y: Math.max(0, y - this.margin.top)
     };
 
-    const s = this.displayDensity;
-    const timelineX = s * timelineMouse.x + this.scrollOffset.x;
-    const timelineY = s * timelineMouse.y + this.scrollOffset.y;
+    const timelineX = timelineMouse.x + this.scrollOffset.x;
+    const timelineY = timelineMouse.y + this.scrollOffset.y;
 
     return {
       x: timelineX,
@@ -298,9 +285,9 @@ export class CanvasRenderer implements Renderer {
 
     const rect: [number, number, number, number] = [
       0,
-      (this.ySummary.height / this.displayDensity) * offsetY,
-      this.ySummary.width / this.displayDensity,
-      (this.ySummary.height / this.displayDensity) * shownY
+      this.ySummary.height * offsetY,
+      this.ySummary.width,
+      this.ySummary.height * shownY
     ];
 
     return {
@@ -322,10 +309,10 @@ export class CanvasRenderer implements Renderer {
     const offsetX = this.scrollOffset.x / this.timelineWidth();
 
     const rect: [number, number, number, number] = [
-      (this.xSummary.width / this.displayDensity) * offsetX,
+      this.xSummary.width * offsetX,
       0,
-      (this.xSummary.width / this.displayDensity) * shownX,
-      this.xSummary.height / this.displayDensity
+      this.xSummary.width * shownX,
+      this.xSummary.height
     ];
 
     return {
@@ -342,40 +329,15 @@ export class CanvasRenderer implements Renderer {
     this.yAxisCtx.resetTransform();
     this.xAxisCtx.resetTransform();
 
-    this.ctx.clearRect(
-      0,
-      0,
-      this.dimensions.width * this.displayDensity,
-      this.dimensions.height * this.displayDensity
-    );
+    this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
 
-    this.ySummaryCtx.clearRect(
-      0,
-      0,
-      this.ySummary.width * this.displayDensity,
-      this.ySummary.height * this.displayDensity
-    );
+    this.ySummaryCtx.clearRect(0, 0, this.ySummary.width, this.ySummary.height);
 
-    this.xSummaryCtx.clearRect(
-      0,
-      0,
-      this.xAxis.width * this.displayDensity,
-      this.xAxis.height * this.displayDensity
-    );
+    this.xSummaryCtx.clearRect(0, 0, this.xAxis.width, this.xAxis.height);
 
-    this.yAxisCtx.clearRect(
-      0,
-      0,
-      this.yAxis.width * this.displayDensity,
-      this.yAxis.height * this.displayDensity
-    );
+    this.yAxisCtx.clearRect(0, 0, this.yAxis.width, this.yAxis.height);
 
-    this.xAxisCtx.clearRect(
-      0,
-      0,
-      this.xAxis.width * this.displayDensity,
-      this.xAxis.height * this.displayDensity
-    );
+    this.xAxisCtx.clearRect(0, 0, this.xAxis.width, this.xAxis.height);
   }
 
   private internalRender(instructions: RenderInstructions) {
@@ -383,9 +345,9 @@ export class CanvasRenderer implements Renderer {
     this.clearAll();
     this.overflowElm.style.width = `${this.margin.left +
       this.margin.right +
-      this.lastOps!.xMax * (this.zoomLevel + 1)}px`;
+      this.lastOps!.xMax * this.zoomLevel}px`;
     this.overflowElm.style.height = `${this.margin.top +
-      this.lastOps!.yMax * (this.zoomLevel + 1)}px`;
+      this.lastOps!.yMax * this.zoomLevel}px`;
 
     this.setTransform();
 
@@ -540,10 +502,8 @@ export class CanvasRenderer implements Renderer {
     }
 
     this.wrapper.scrollTo(
-      (timelineXPercent * this.timelineWidth() - (x - originalScrollLeft)) /
-        this.displayDensity,
-      (timelineYPercent * this.timelineHeight() - (y - originalScrollTop)) /
-        this.displayDensity
+      timelineXPercent * this.timelineWidth() - (x - originalScrollLeft),
+      timelineYPercent * this.timelineHeight() - (y - originalScrollTop)
     );
 
     this.render(this.lastOps);
@@ -622,19 +582,15 @@ export class CanvasRenderer implements Renderer {
       if (this.validYBrush) {
         this.wrapper.scrollBy(
           0,
-          -(
-            this.ySummaryY.invert(y / this.displayDensity) /
-            this.ySummaryY.domain()[1]
-          ) * this.timelineHeight()
+          -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
+            this.timelineHeight()
         );
       }
     } else if (start && start.target === this.xSummary) {
       if (this.validXBrush) {
         this.wrapper.scrollBy(
-          -(
-            this.xSummaryX.invert(x / this.displayDensity) /
-            this.xSummaryX.domain()[1]
-          ) * this.timelineWidth(),
+          -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
+            this.timelineWidth(),
           0
         );
       }
@@ -672,8 +628,7 @@ export class CanvasRenderer implements Renderer {
       ),
       max: Math.floor(
         renderInstructions.yUnit.invert(
-          (this.scrollOffset.y + this.dimensions.height * this.displayDensity) /
-            this.scale()
+          (this.scrollOffset.y + this.dimensions.height) / this.scale()
         )
       )
     };
