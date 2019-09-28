@@ -49,7 +49,7 @@ export class CanvasRenderer implements Renderer {
     },
     public readonly target: HTMLElement
   ) {
-    this.margin = this.dimensions.margin || { top: 100, left: 100, right: 200 };
+    this.margin = this.dimensions.margin || { top: 100, left: 100, right: 100 };
 
     this.overflowElm = document.createElement("div");
     this.overflowElm.style.width = "1px";
@@ -223,8 +223,8 @@ export class CanvasRenderer implements Renderer {
 
   onScroll() {
     this.scrollOffset = {
-      x: this.wrapper.scrollLeft,
-      y: this.wrapper.scrollTop
+      x: this.wrapper.scrollLeft * this.displayDensity,
+      y: this.wrapper.scrollTop * this.displayDensity
     };
 
     if (this.lastOps) {
@@ -236,13 +236,6 @@ export class CanvasRenderer implements Renderer {
     return this.displayDensity + this.zoomLevel;
   }
 
-  private timelineMouse({ x, y }: { x: number; y: number }) {
-    return {
-      x: Math.max(0, x - this.margin.left),
-      y: Math.max(0, y - this.margin.top)
-    };
-  }
-
   private toTimelinePosition({
     x,
     y
@@ -250,11 +243,14 @@ export class CanvasRenderer implements Renderer {
     x: number;
     y: number;
   }): { x: number; y: number } {
-    const timelineMouse = this.timelineMouse({ x, y });
+    const timelineMouse = {
+      x: Math.max(0, x - this.margin.left),
+      y: Math.max(0, y - this.margin.top)
+    };
 
     const s = this.displayDensity;
-    const timelineX = s * timelineMouse.x + this.wrapper.scrollLeft;
-    const timelineY = s * timelineMouse.y + this.wrapper.scrollTop;
+    const timelineX = s * timelineMouse.x + this.scrollOffset.x;
+    const timelineY = s * timelineMouse.y + this.scrollOffset.y;
 
     return {
       x: timelineX,
@@ -276,13 +272,6 @@ export class CanvasRenderer implements Renderer {
     }
 
     return this.lastOps.yMax * this.scale();
-  }
-  private maxHeight(): number {
-    return this.margin.top + this.timelineHeight();
-  }
-
-  private maxWidth(): number {
-    return this.margin.left + this.margin.right + this.timelineWidth();
   }
 
   private ySummaryBrushRange(): {
@@ -380,8 +369,11 @@ export class CanvasRenderer implements Renderer {
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
     this.clearAll();
-    this.overflowElm.style.width = `${this.maxWidth()}px`;
-    this.overflowElm.style.height = `${this.maxHeight()}px`;
+    this.overflowElm.style.width = `${this.margin.left +
+      this.margin.right +
+      this.lastOps!.xMax * (this.zoomLevel + 1)}px`;
+    this.overflowElm.style.height = `${this.margin.top +
+      this.lastOps!.yMax * (this.zoomLevel + 1)}px`;
 
     this.setTransform();
 
@@ -511,8 +503,8 @@ export class CanvasRenderer implements Renderer {
       return;
     }
 
-    const originalScrollLeft = this.wrapper.scrollLeft;
-    const originalScrollTop = this.wrapper.scrollTop;
+    const originalScrollLeft = this.scrollOffset.x;
+    const originalScrollTop = this.scrollOffset.y;
     const { x, y } = this.toTimelinePosition(mousePosition);
     const timelineXPercent = x / this.timelineWidth();
     const timelineYPercent = y / this.timelineHeight();
