@@ -558,22 +558,9 @@ export class CanvasRenderer implements Renderer {
         this.wrapper.scrollTop
       );
     } else {
-      const wrapperX = x * this.displayDensity - this.margin.left;
-      const wrapperY = y * this.displayDensity - this.margin.top;
-
-      if (wrapperX < 0 || wrapperY < 0) {
-        // skip
-        return;
-      }
-
-      const timelineX = wrapperX + this.wrapper.scrollLeft;
-      const timelineY = wrapperY + this.wrapper.scrollTop;
-
-      const row = Math.floor(this.lastOps!.yUnit.invert(timelineY));
-      const timestamp = this.lastOps!.xUnit.invert(timelineX);
-      const match = binarySearch(timestamp, this.lastOps!.rowMap[row]!);
-
+      const match = this.entryFromPosition({ x, y });
       if (match != null) {
+        console.log(match);
       }
     }
   }
@@ -637,9 +624,12 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  mouseMove(mousePosition: { x: number; y: number }) {
+  private entryFromPosition(mousePosition: {
+    x: number;
+    y: number;
+  }): TimelineEvent | undefined {
     if (this.lastOps == null) {
-      return;
+      return undefined;
     }
 
     const { x, y } = this.toTimelinePosition(mousePosition);
@@ -647,10 +637,15 @@ export class CanvasRenderer implements Renderer {
     const row = Math.floor(this.lastOps.yUnit.invert(y / this.scale()));
     const timestamp = this.lastOps.xUnit.invert(x / this.scale());
 
-    const match: TimelineEvent | undefined = binarySearch(
-      timestamp,
-      this.lastOps.rowMap[row]!
-    );
+    return binarySearch(timestamp, this.lastOps.rowMap[row]!);
+  }
+
+  mouseMove(mousePosition: { x: number; y: number }) {
+    if (this.lastOps == null) {
+      return;
+    }
+
+    const match = this.entryFromPosition(mousePosition);
 
     if (match == null && this.activeUUID != null) {
       this.activeUUID = undefined;
