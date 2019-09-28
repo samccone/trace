@@ -1,5 +1,5 @@
 import { Renderer } from "./renderer";
-import { RenderInstructions, TimelineEvent, RenderOp } from "../format";
+import { RenderInstructions, TimelineEvent } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
 
@@ -377,8 +377,6 @@ export class CanvasRenderer implements Renderer {
       this.xAxis.height * this.displayDensity
     );
   }
-
-  private renderSummary() {}
 
   private internalRender(instructions: RenderInstructions) {
     this.lastOps = instructions;
