@@ -10,7 +10,6 @@ export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private wrapper: HTMLElement;
-  private summaryPane: HTMLElement;
 
   private overflowElm: HTMLElement;
   private axes: HTMLElement;
@@ -56,13 +55,6 @@ export class CanvasRenderer implements Renderer {
     this.overflowElm = document.createElement("div");
     this.overflowElm.style.width = "1px";
     this.overflowElm.style.height = "1px";
-    this.summaryPane = document.createElement("div");
-    this.summaryPane.className = "summaryPane";
-    this.summaryPane.style.width = `${this.margin.right}px`;
-    this.summaryPane.style.height = `${this.dimensions.height}px`;
-    this.summaryPane.style.position = "fixed";
-    this.summaryPane.style.right = `0px`;
-    this.summaryPane.style.top = `0px`;
 
     this.wrapper = document.createElement("div");
     this.wrapper.style.overflow = "scroll";
@@ -148,7 +140,6 @@ export class CanvasRenderer implements Renderer {
     this.timeline.appendChild(this.canvas);
     this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
-    this.wrapper.appendChild(this.summaryPane);
     this.target.appendChild(this.wrapper);
 
     this.wrapper.addEventListener("scroll", () => {
@@ -535,7 +526,11 @@ export class CanvasRenderer implements Renderer {
     } else {
       const match = this.entryFromPosition({ x, y });
       if (match != null) {
-        console.log(match);
+        window.dispatchEvent(
+          new CustomEvent<{ match: TimelineEvent }>("timeline-event-click", {
+            detail: { match }
+          })
+        );
       }
     }
   }
