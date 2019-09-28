@@ -85,7 +85,6 @@ export class CanvasRenderer implements Renderer {
     this.ySummary.style.borderRight = `1px solid black`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
-    // this.ySummaryCtx.scale(this.displayDensity, this.displayDensity);
     this.ySummaryY = scaleLinear();
     this.ySummaryX = scaleLinear().domain([1, 0]);
 
@@ -113,7 +112,6 @@ export class CanvasRenderer implements Renderer {
     this.xSummary.style.borderBottom = `1px solid black`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
-    // this.xSummaryCtx.scale(this.displayDensity, this.displayDensity);
     this.xSummaryY = scaleLinear().domain([1, 0]);
     this.xSummaryX = scaleLinear();
 
