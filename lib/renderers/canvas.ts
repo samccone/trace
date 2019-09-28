@@ -1,5 +1,5 @@
 import { Renderer } from "./renderer";
-import { RenderInstructions, TimelineEvent } from "../format";
+import { RenderInstructions, TimelineEvent, RenderOp } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
 
@@ -34,6 +34,7 @@ export class CanvasRenderer implements Renderer {
 
   private xAxis: HTMLCanvasElement;
   private xAxisCtx: CanvasRenderingContext2D;
+  private pendingRender: number | undefined;
 
   private marginWrapper: HTMLElement;
   private timeline: HTMLElement;
@@ -239,7 +240,7 @@ export class CanvasRenderer implements Renderer {
     };
 
     if (this.lastOps) {
-      this.internalRender(this.lastOps);
+      this.render(this.lastOps);
     }
   }
 
@@ -394,7 +395,16 @@ export class CanvasRenderer implements Renderer {
     const transformScrollY = this.scrollOffset.y / this.scale();
     const fontSize = parseInt(this.ctx.font);
 
+    const rowRenderBounds = this.visibleRows(instructions);
+
     for (const opt of instructions.opts) {
+      const currentRow = this.toRow(instructions.yUnit, opt.y * this.scale());
+      if (
+        currentRow < rowRenderBounds.min ||
+        currentRow > rowRenderBounds.max
+      ) {
+        continue;
+      }
       if (this.activeUUID === opt.uuid) {
         this.ctx.fillStyle = "red";
       } else {
@@ -503,6 +513,7 @@ export class CanvasRenderer implements Renderer {
     const xBrush: [number, number, number, number] = xBrushCoords.rect;
     this.xSummaryCtx.strokeRect(...xBrush);
     this.xSummaryCtx.fillRect(...xBrush);
+    this.pendingRender = undefined;
   }
 
   private zoom({
@@ -644,10 +655,30 @@ export class CanvasRenderer implements Renderer {
 
     const { x, y } = this.toTimelinePosition(mousePosition);
 
-    const row = Math.floor(this.lastOps.yUnit.invert(y / this.scale()));
+    const row = this.toRow(this.lastOps.yUnit, y);
     const timestamp = this.lastOps.xUnit.invert(x / this.scale());
 
     return binarySearch(timestamp, this.lastOps.rowMap[row]!);
+  }
+
+  private toRow(yUnit: ScaleLinear<number, number>, y: number): number {
+    return Math.floor(yUnit.invert(y / this.scale()));
+  }
+
+  private visibleRows(
+    renderInstructions: RenderInstructions
+  ): { min: number; max: number } {
+    return {
+      min: Math.floor(
+        renderInstructions.yUnit.invert(this.scrollOffset.y / this.scale())
+      ),
+      max: Math.floor(
+        renderInstructions.yUnit.invert(
+          (this.scrollOffset.y + this.dimensions.height * this.displayDensity) /
+            this.scale()
+        )
+      )
+    };
   }
 
   mouseMove(mousePosition: { x: number; y: number }) {
@@ -670,6 +701,12 @@ export class CanvasRenderer implements Renderer {
   }
 
   render(instructions: RenderInstructions) {
-    requestAnimationFrame(() => this.internalRender(instructions));
+    if (this.pendingRender) {
+      return;
+    }
+
+    this.pendingRender = requestAnimationFrame(() =>
+      this.internalRender(instructions)
+    );
   }
 }
