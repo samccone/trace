@@ -282,7 +282,7 @@ export class CanvasRenderer implements Renderer {
     rect: [number, number, number, number];
   } {
     const shownY = Math.min(1, this.canvas.height / this.timelineHeight());
-    const offsetY = this.wrapper.scrollTop / this.timelineHeight();
+    const offsetY = this.scrollOffset.y / this.timelineHeight();
 
     const rect: [number, number, number, number] = [
       0,
@@ -307,7 +307,7 @@ export class CanvasRenderer implements Renderer {
     rect: [number, number, number, number];
   } {
     const shownX = Math.min(1, this.canvas.width / this.timelineWidth());
-    const offsetX = this.wrapper.scrollLeft / this.timelineWidth();
+    const offsetX = this.scrollOffset.x / this.timelineWidth();
 
     const rect: [number, number, number, number] = [
       (this.xSummary.width / this.displayDensity) * offsetX,
@@ -597,15 +597,19 @@ export class CanvasRenderer implements Renderer {
       if (this.validYBrush) {
         this.wrapper.scrollBy(
           0,
-          -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
-            this.timelineHeight()
+          -(
+            this.ySummaryY.invert(y / this.displayDensity) /
+            this.ySummaryY.domain()[1]
+          ) * this.timelineHeight()
         );
       }
     } else if (start && start.target === this.xSummary) {
       if (this.validXBrush) {
         this.wrapper.scrollBy(
-          -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
-            this.timelineWidth(),
+          -(
+            this.xSummaryX.invert(x / this.displayDensity) /
+            this.xSummaryX.domain()[1]
+          ) * this.timelineWidth(),
           0
         );
       }
