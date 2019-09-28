@@ -59,7 +59,7 @@ export class CanvasRenderer implements Renderer {
     this.wrapper.style.zIndex = "1";
     this.wrapper.style.position = "relative";
 
-    this.displayDensity = window.devicePixelRatio;
+    this.displayDensity = 2;
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d")!;
 
@@ -505,6 +505,7 @@ export class CanvasRenderer implements Renderer {
 
     const originalScrollLeft = this.scrollOffset.x;
     const originalScrollTop = this.scrollOffset.y;
+
     const { x, y } = this.toTimelinePosition(mousePosition);
     const timelineXPercent = x / this.timelineWidth();
     const timelineYPercent = y / this.timelineHeight();
@@ -517,8 +518,10 @@ export class CanvasRenderer implements Renderer {
     }
 
     this.wrapper.scrollTo(
-      timelineXPercent * this.timelineWidth() - (x - originalScrollLeft),
-      timelineYPercent * this.timelineHeight() - (y - originalScrollTop)
+      (timelineXPercent * this.timelineWidth() - (x - originalScrollLeft)) /
+        this.displayDensity,
+      (timelineYPercent * this.timelineHeight() - (y - originalScrollTop)) /
+        this.displayDensity
     );
 
     this.render(this.lastOps);
