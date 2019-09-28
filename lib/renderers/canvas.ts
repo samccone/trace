@@ -40,7 +40,8 @@ export class CanvasRenderer implements Renderer {
   private lastOps?: RenderInstructions;
   private zoomLevel: number = 1;
   private margin: { top: number; left: number; right: number };
-  private activeUUID: string | undefined;
+  private hoverUUID: string | undefined;
+  private selectedUUID: string | undefined;
 
   constructor(
     public dimensions: {
@@ -356,7 +357,7 @@ export class CanvasRenderer implements Renderer {
       ) {
         continue;
       }
-      if (this.activeUUID === opt.uuid) {
+      if (this.hoverUUID === opt.uuid || this.selectedUUID === opt.uuid) {
         this.ctx.fillStyle = "red";
       } else {
         this.ctx.fillStyle = opt.fill;
@@ -525,7 +526,9 @@ export class CanvasRenderer implements Renderer {
       );
     } else {
       const match = this.entryFromPosition({ x, y });
+      this.selectedUUID = undefined;
       if (match != null) {
+        this.selectedUUID = match.uuid;
         window.dispatchEvent(
           new CustomEvent<{ match: TimelineEvent }>("timeline-event-click", {
             detail: { match }
@@ -636,14 +639,19 @@ export class CanvasRenderer implements Renderer {
 
     const match = this.entryFromPosition(mousePosition);
 
-    if (match == null && this.activeUUID != null) {
-      this.activeUUID = undefined;
+    if (match == null && this.hoverUUID != null) {
+      this.hoverUUID = undefined;
       this.render(this.lastOps);
       return;
     }
 
-    if (match != null && match.uuid !== this.activeUUID) {
-      this.activeUUID = match.uuid;
+    if (match != null && match.uuid !== this.hoverUUID) {
+      this.hoverUUID = match.uuid;
+      window.dispatchEvent(
+        new CustomEvent<{ match: TimelineEvent }>("timeline-event-hover", {
+          detail: { match }
+        })
+      );
       this.render(this.lastOps);
     }
   }

@@ -13,8 +13,8 @@ const renderer = new CanvasRenderer(
     height: window.innerHeight,
     margin: {
       right: panelWidth,
-      top: 0,
-      left: 0
+      top: 100,
+      left: 100
     }
   },
   elm
@@ -51,6 +51,22 @@ const timeline = new Timeline(
   }
 );
 
+const tooltip = document.createElement("div");
+tooltip.style.zIndex = "10";
+tooltip.style.position = "fixed";
+tooltip.style.background = "#000";
+tooltip.style.color = "white";
+tooltip.style.padding = "5px";
+tooltip.style.fontSize = "10px";
+tooltip.style.transform = "translateX(-50%) translateY(-140%)";
+tooltip.style.borderRadius = "3px";
+document.body.appendChild(tooltip);
+
+window.addEventListener("mousemove", e => {
+  tooltip.style.top = `${e.clientY}px`;
+  tooltip.style.left = `${e.clientX}px`;
+});
+
 const detailPanel = document.createElement("div");
 detailPanel.classList.add("detail-panel");
 detailPanel.style.left = `calc(100% - ${panelWidth}px)`;
@@ -60,8 +76,13 @@ document.body.appendChild(detailPanel);
 window.addEventListener("timeline-event-click", (e: Event) => {
   const m = (e as CustomEvent<{ match: TimelineEvent }>).detail.match;
   detailPanel.textContent = `evt: ${m.label}\n\n
-  duration: ${(m.end - m.start) / 1000} seconds
+duration: ${(m.end - m.start) / 1000} seconds
   `;
+});
+
+window.addEventListener("timeline-event-hover", (e: Event) => {
+  const m = (e as CustomEvent<{ match: TimelineEvent }>).detail.match;
+  tooltip.textContent = `Duration: ${m.end - m.start}ms`;
 });
 
 document.body.appendChild(elm);
