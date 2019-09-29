@@ -387,8 +387,8 @@ export class CanvasRenderer implements Renderer {
       this.ctx.fillStyle = "rgba(0,0,255,.2)";
       this.ctx.strokeStyle = "blue";
       const selectedRect: [number, number, number, number] = [
-        this.selectedRange.start.x,
-        this.selectedRange.start.y,
+        this.selectedRange.start.x - transformScrollX,
+        this.selectedRange.start.y - transformScrollY,
         (this.selectedRange.end &&
           Math.max(this.selectedRange.end.x - this.selectedRange.start.x, 0)) ||
           0,
@@ -401,8 +401,10 @@ export class CanvasRenderer implements Renderer {
       this.ctx.fillStyle = "black";
       this.selectedRange.end &&
         this.ctx.fillText(
-          Math.round(this.selectedRange.end.x - this.selectedRange.start.x) +
-            " ms",
+          Math.round(
+            this.lastOps.xUnit.invert(this.selectedRange.end.x) -
+              this.lastOps.xUnit.invert(this.selectedRange.start.x)
+          ) + " ms",
           selectedRect[0] + selectedRect[2] / 2,
           selectedRect[1] + selectedRect[3]
         );
@@ -647,15 +649,7 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  dragRange(
-    {
-      x,
-      y
-    }: {
-      x: number;
-      y: number;
-    } // start: { x: number; y: number; target: HTMLCanvasElement } | null
-  ) {
+  dragRange({ x, y }: { x: number; y: number }) {
     const pos = this.toTimelinePosition({ x, y });
     this.selectedRange.end = pos;
 
