@@ -645,13 +645,19 @@ export class CanvasRenderer implements Renderer {
     const pos = this.toTimelinePosition({ x, y });
 
     if (this.lastOps) {
-      this.selectedRange.start = pos;
+      this.selectedRange.start = {
+        x: pos.x / this.scale(),
+        y: pos.y / this.scale()
+      };
     }
   }
 
   dragRange({ x, y }: { x: number; y: number }) {
     const pos = this.toTimelinePosition({ x, y });
-    this.selectedRange.end = pos;
+    this.selectedRange.end = {
+      x: pos.x / this.scale(),
+      y: pos.y / this.scale()
+    };
 
     this.render(this.lastOps!);
   }
