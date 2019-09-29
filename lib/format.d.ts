@@ -4,6 +4,8 @@ export interface RowMap {
   [idx: string]: TimelineEvent[];
 }
 
+export type TimelineEventInteraction = CustomEvent<{ match: TimelineEvent }>;
+
 export interface RenderOp {
   x: number;
   y: number;

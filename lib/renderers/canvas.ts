@@ -1,5 +1,9 @@
 import { Renderer } from "./renderer";
-import { RenderInstructions, TimelineEvent } from "../format";
+import {
+  RenderInstructions,
+  TimelineEvent,
+  TimelineEventInteraction
+} from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
 
@@ -529,11 +533,13 @@ export class CanvasRenderer implements Renderer {
       this.selectedUUID = undefined;
       if (match != null) {
         this.selectedUUID = match.uuid;
-        window.dispatchEvent(
-          new CustomEvent<{ match: TimelineEvent }>("timeline-event-click", {
-            detail: { match }
-          })
-        );
+        const evt: TimelineEventInteraction = new CustomEvent<{
+          match: TimelineEvent;
+        }>("timeline-event-click", {
+          detail: { match }
+        });
+
+        window.dispatchEvent(evt);
       }
     }
   }
@@ -647,12 +653,15 @@ export class CanvasRenderer implements Renderer {
 
     if (match != null && match.uuid !== this.hoverUUID) {
       this.hoverUUID = match.uuid;
-      window.dispatchEvent(
-        new CustomEvent<{ match: TimelineEvent }>("timeline-event-hover", {
-          detail: { match }
-        })
-      );
+      const evt: TimelineEventInteraction = new CustomEvent<{
+        match: TimelineEvent;
+      }>("timeline-event-hover", {
+        detail: { match }
+      });
+
+      window.dispatchEvent(evt);
       this.render(this.lastOps);
+    } else {
     }
   }
 

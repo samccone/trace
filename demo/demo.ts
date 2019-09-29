@@ -1,6 +1,10 @@
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
-import { TimelineEvent, TimelineEvents } from "../lib/format";
+import {
+  TimelineEvent,
+  TimelineEvents,
+  TimelineEventInteraction
+} from "../lib/format";
 import { d } from "../data/data4";
 
 const elm = document.createElement("div");
@@ -75,14 +79,14 @@ detailPanel.style.width = `${panelWidth}px`;
 document.body.appendChild(detailPanel);
 
 window.addEventListener("timeline-event-click", (e: Event) => {
-  const m = (e as CustomEvent<{ match: TimelineEvent }>).detail.match;
+  const m = (e as TimelineEventInteraction).detail.match;
   detailPanel.textContent = `evt: ${m.label}\n\n
 duration: ${(m.end - m.start) / 1000} seconds
   `;
 });
 
 window.addEventListener("timeline-event-hover", (e: Event) => {
-  const m = (e as CustomEvent<{ match: TimelineEvent }>).detail.match;
+  const m = (e as TimelineEventInteraction).detail.match;
   tooltip.textContent = `Duration: ${m.end - m.start}ms`;
 });
 
