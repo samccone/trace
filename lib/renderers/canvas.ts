@@ -209,12 +209,6 @@ export class CanvasRenderer implements Renderer {
     this.ySummaryCtx.resetTransform();
 
     this.xSummaryCtx.resetTransform();
-
-    this.yAxisCtx.resetTransform();
-    this.yAxisCtx.scale(1, this.scale());
-
-    this.xAxisCtx.resetTransform();
-    this.xAxisCtx.scale(this.scale(), 1);
   }
 
   onScroll() {
@@ -322,8 +316,6 @@ export class CanvasRenderer implements Renderer {
 
   private clearAll() {
     this.ctx.resetTransform();
-    this.yAxisCtx.resetTransform();
-    this.xAxisCtx.resetTransform();
 
     this.ctx.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
 
@@ -404,9 +396,9 @@ export class CanvasRenderer implements Renderer {
       if (yS.y !== undefined && yS.height !== undefined) {
         this.yAxisCtx.fillRect(
           this.ySummaryX(yS.pct),
-          yS.y - transformScrollY,
+          (yS.y - transformScrollY) * this.scale(),
           this.ySummaryX(0) - this.ySummaryX(yS.pct),
-          yS.height
+          yS.height * this.scale()
         );
 
         this.yAxisCtx.fillStyle = "black";
@@ -415,7 +407,7 @@ export class CanvasRenderer implements Renderer {
           this.yAxisCtx.fillText(
             yS.text.slice(0, Math.floor(this.yAxis.width / fontSize) + 3),
             0,
-            yS.y - transformScrollY + yS.height / 2
+            (yS.y - transformScrollY + yS.height / 2) * this.scale()
           );
       }
     }
@@ -445,15 +437,19 @@ export class CanvasRenderer implements Renderer {
 
       if (xS.x !== undefined && xS.width !== undefined) {
         this.xAxisCtx.fillRect(
-          xS.x - transformScrollX,
+          (xS.x - transformScrollX) * this.scale(),
           this.xSummaryY(xS.pct),
-          xS.width,
+          xS.width * this.scale(),
           this.xSummaryY(0) - this.xSummaryY(xS.pct)
         );
         this.xAxisCtx.fillStyle = "black";
 
         if (xS.text && i % 3 === 0) {
-          textDraws.push([xS.text, xS.x - transformScrollX, this.xAxis.height]);
+          textDraws.push([
+            xS.text,
+            (xS.x - transformScrollX) * this.scale(),
+            this.xAxis.height
+          ]);
         }
       }
     }
