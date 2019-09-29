@@ -14,6 +14,10 @@ export class CanvasRenderer implements Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private wrapper: HTMLElement;
+  private selectedRange: {
+    start: { x: number; y: number } | null;
+    end: { x: number; y: number } | null;
+  };
 
   private overflowElm: HTMLElement;
   private axes: HTMLElement;
@@ -56,7 +60,7 @@ export class CanvasRenderer implements Renderer {
     public readonly target: HTMLElement
   ) {
     this.margin = this.dimensions.margin || { top: 100, left: 100, right: 200 };
-
+    this.selectedRange = { start: null, end: null };
     this.overflowElm = document.createElement("div");
     this.overflowElm.style.width = "1px";
     this.overflowElm.style.height = "1px";
@@ -379,6 +383,30 @@ export class CanvasRenderer implements Renderer {
         );
       }
     }
+    if (this.selectedRange.start !== null) {
+      this.ctx.fillStyle = "rgba(0,0,255,.2)";
+      this.ctx.strokeStyle = "blue";
+      const selectedRect: [number, number, number, number] = [
+        this.selectedRange.start.x,
+        this.selectedRange.start.y,
+        (this.selectedRange.end &&
+          Math.max(this.selectedRange.end.x - this.selectedRange.start.x, 0)) ||
+          0,
+        (this.selectedRange.end &&
+          Math.max(this.selectedRange.end.y - this.selectedRange.start.y, 0)) ||
+          0
+      ];
+      this.ctx.fillRect(...selectedRect);
+      this.ctx.strokeRect(...selectedRect);
+      this.ctx.fillStyle = "black";
+      this.selectedRange.end &&
+        this.ctx.fillText(
+          Math.round(this.selectedRange.end.x - this.selectedRange.start.x) +
+            " ms",
+          selectedRect[0] + selectedRect[2] / 2,
+          selectedRect[1] + selectedRect[3]
+        );
+    }
 
     this.ySummaryY.domain([0, instructions.ySummary.length]);
 
@@ -509,7 +537,14 @@ export class CanvasRenderer implements Renderer {
     this.zoom({ changeAmount: -ZOOM_AMOUNT, mousePosition });
   }
 
-  click({ x, y, target }: { x: number; y: number; target: HTMLCanvasElement }) {
+  click(
+    { x, y, target }: { x: number; y: number; target: HTMLCanvasElement },
+    shiftDown: Boolean
+  ) {
+    if (shiftDown) {
+      this.selectedRange = { start: null, end: null };
+    }
+
     if (target === this.ySummary) {
       this.wrapper.scrollTo(
         this.wrapper.scrollLeft,
@@ -542,7 +577,7 @@ export class CanvasRenderer implements Renderer {
   }
 
   grab() {
-    this.target.style.cursor = "grabbing";
+    this.target.style.cursor = "grab";
   }
 
   startDragging({
@@ -554,7 +589,7 @@ export class CanvasRenderer implements Renderer {
     y: number;
     target: HTMLCanvasElement;
   }) {
-    this.target.style.cursor = "grab";
+    this.target.style.cursor = "grabbing";
 
     if (target === this.ySummary) {
       const yBrushCoords = this.ySummaryBrushRange();
@@ -576,29 +611,58 @@ export class CanvasRenderer implements Renderer {
   }
 
   drag(
-    { x, y }: { x: number; y: number },
+    { dx, dy }: { dx: number; dy: number },
     start: { x: number; y: number; target: HTMLCanvasElement } | null
   ) {
     if (start && start.target === this.ySummary) {
       if (this.validYBrush) {
         this.wrapper.scrollBy(
           0,
-          -(this.ySummaryY.invert(y) / this.ySummaryY.domain()[1]) *
+          -(this.ySummaryY.invert(dy) / this.ySummaryY.domain()[1]) *
             this.timelineHeight()
         );
       }
     } else if (start && start.target === this.xSummary) {
       if (this.validXBrush) {
         this.wrapper.scrollBy(
-          -(this.xSummaryX.invert(x) / this.xSummaryX.domain()[1]) *
+          -(this.xSummaryX.invert(dx) / this.xSummaryX.domain()[1]) *
             this.timelineWidth(),
           0
         );
       }
     } else {
-      this.wrapper.scrollBy(x, y);
+      this.wrapper.scrollBy(dx, dy);
     }
   }
+
+  range() {
+    this.target.style.cursor = "crosshair";
+  }
+
+  startRange({ x, y }: { x: number; y: number; target: HTMLCanvasElement }) {
+    const pos = this.toTimelinePosition({ x, y });
+
+    if (this.lastOps) {
+      this.selectedRange.start = pos;
+    }
+  }
+
+  dragRange(
+    {
+      x,
+      y
+    }: {
+      x: number;
+      y: number;
+    } // start: { x: number; y: number; target: HTMLCanvasElement } | null
+  ) {
+    const pos = this.toTimelinePosition({ x, y });
+    this.selectedRange.end = pos;
+
+    this.render(this.lastOps!);
+  }
+
+  stopRange() {}
 
   private entryFromPosition(mousePosition: {
     x: number;

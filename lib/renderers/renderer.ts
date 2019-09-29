@@ -14,6 +14,8 @@ export abstract class Renderer {
 
   abstract zoomOut(mousePosition: { x: number; y: number }): void;
 
+  abstract grab(): void;
+
   abstract startDragging(
     mousePosition: {
       x: number;
@@ -22,20 +24,38 @@ export abstract class Renderer {
     } | null
   ): void;
 
-  abstract grab(): void;
-
   abstract stopDragging(): void;
 
   abstract drag(
-    by: { x: number; y: number },
+    by: { x: number; y: number; dx: number; dy: number },
     start: { x: number; y: number; target: Element } | null
   ): void;
 
-  abstract click(mousePosition: {
-    x: number;
-    y: number;
-    target: Element;
-  }): void;
+  abstract range(): void;
+
+  abstract startRange(
+    mousePosition: {
+      x: number;
+      y: number;
+      target: Element;
+    } | null
+  ): void;
+
+  abstract stopRange(): void;
+
+  abstract dragRange(
+    by: { x: number; y: number; dx: number; dy: number },
+    start: { x: number; y: number; target: Element } | null
+  ): void;
+
+  abstract click(
+    mousePosition: {
+      x: number;
+      y: number;
+      target: Element;
+    },
+    shiftDown: Boolean
+  ): void;
 
   abstract mouseMove(mousePosition: { x: number; y: number }): void;
 }

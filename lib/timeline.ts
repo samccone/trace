@@ -24,6 +24,8 @@ const formatDate = (d: Date) => {
 export class Timeline {
   private dragging = false;
   private pointerDown = false;
+  private shiftDown = false;
+  private draggingRange = false;
   private pointerDownPosition: {
     x: number;
     y: number;
@@ -51,24 +53,56 @@ export class Timeline {
   }
 
   private setListeners() {
+    window.addEventListener("keydown", (e: any) => {
+      this.shiftDown = e.shiftKey;
+      this.renderer.range();
+    });
+
+    window.addEventListener("keyup", (e: any) => {
+      this.shiftDown = e.shiftKey;
+      this.renderer.grab();
+    });
+
     window.addEventListener("pointermove", (e: any) => {
       const currentPosition = { x: e.layerX, y: e.layerY, target: e.target };
       this.renderer.mouseMove(currentPosition);
 
       if (this.pointerDown) {
-        if (!this.dragging) {
-          this.renderer.startDragging(this.pointerDownPosition);
-          this.dragging = true;
+        if (!this.dragging && !this.draggingRange) {
+          if (this.shiftDown) {
+            this.renderer.startRange(this.pointerDownPosition);
+            this.draggingRange = true;
+          } else {
+            this.renderer.startDragging(this.pointerDownPosition);
+            this.dragging = true;
+          }
+
           this.startDraggingPosition = this.pointerDownPosition;
-          this.renderer.grab();
         }
 
         if (this.lastMousePosition == null) {
           this.lastMousePosition = { x: e.layerX, y: e.layerY };
         } else {
-          const x = this.lastMousePosition.x - e.layerX;
-          const y = this.lastMousePosition.y - e.layerY;
-          this.renderer.drag({ x, y }, this.startDraggingPosition);
+          const dx = this.lastMousePosition.x - e.layerX;
+          const dy = this.lastMousePosition.y - e.layerY;
+
+          if (this.draggingRange) {
+            this.renderer.dragRange(
+              { ...currentPosition, dx, dy },
+              this.startDraggingPosition
+            );
+          } else {
+            this.renderer.drag(
+              { ...currentPosition, dx, dy },
+              this.startDraggingPosition
+            );
+          }
+        }
+      } else {
+        if (this.shiftDown) {
+          this.renderer.range();
+        } else {
+          this.renderer.grab();
         }
       }
       this.lastMousePosition = currentPosition;
@@ -80,11 +114,15 @@ export class Timeline {
     });
 
     window.addEventListener("pointerup", (_: PointerEvent) => {
-      if (!this.dragging && this.pointerDownPosition) {
-        this.renderer.click(this.pointerDownPosition);
+      if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
+        this.renderer.click(this.pointerDownPosition, this.shiftDown);
       } else if (this.dragging) {
         this.dragging = false;
         this.renderer.stopDragging();
+        this.startDraggingPosition = null;
+      } else if (this.draggingRange) {
+        this.draggingRange = false;
+        this.renderer.stopRange();
         this.startDraggingPosition = null;
       }
 
