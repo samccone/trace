@@ -428,7 +428,7 @@ export class CanvasRenderer implements Renderer {
     this.xSummaryX.domain([0, instructions.xSummary.length]);
 
     this.xSummaryCtx.fillStyle = "#cccccc";
-
+    const textDraws: Array<[string, number, number]> = [];
     for (const [i, xS] of instructions.xSummary.entries()) {
       this.xSummaryCtx.fillRect(
         this.xSummaryX(xS.index),
@@ -449,13 +449,13 @@ export class CanvasRenderer implements Renderer {
         this.xAxisCtx.fillStyle = "black";
 
         if (xS.text && i % 3 === 0) {
-          this.xAxisCtx.fillText(
-            xS.text,
-            xS.x - transformScrollX,
-            this.xAxis.height
-          );
+          textDraws.push([xS.text, xS.x - transformScrollX, this.xAxis.height]);
         }
       }
+    }
+
+    for (const d of textDraws) {
+      this.xAxisCtx.fillText(...d);
     }
 
     this.xSummaryCtx.strokeStyle = "blue";
