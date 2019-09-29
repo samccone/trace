@@ -4,7 +4,9 @@ export interface RowMap {
   [idx: string]: TimelineEvent[];
 }
 
-export type TimelineEventInteraction = CustomEvent<{ match: TimelineEvent }>;
+export type TimelineEventInteraction = CustomEvent<{
+  match: TimelineEvent | undefined;
+}>;
 
 export interface RenderOp {
   x: number;

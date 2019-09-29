@@ -533,11 +533,12 @@ export class CanvasRenderer implements Renderer {
       this.selectedUUID = undefined;
       if (match != null) {
         this.selectedUUID = match.uuid;
-        const evt: TimelineEventInteraction = new CustomEvent<{
-          match: TimelineEvent;
-        }>("timeline-event-click", {
-          detail: { match }
-        });
+        const evt: TimelineEventInteraction = new CustomEvent(
+          "timeline-event-click",
+          {
+            detail: { match }
+          }
+        );
 
         window.dispatchEvent(evt);
       }
@@ -651,17 +652,21 @@ export class CanvasRenderer implements Renderer {
       return;
     }
 
+    const evt: TimelineEventInteraction = new CustomEvent(
+      "timeline-event-hover",
+      {
+        detail: { match: match }
+      }
+    );
+
     if (match != null && match.uuid !== this.hoverUUID) {
       this.hoverUUID = match.uuid;
-      const evt: TimelineEventInteraction = new CustomEvent<{
-        match: TimelineEvent;
-      }>("timeline-event-hover", {
-        detail: { match }
-      });
-
-      window.dispatchEvent(evt);
       this.render(this.lastOps);
-    } else {
+      window.dispatchEvent(evt);
+    }
+
+    if (match == null) {
+      window.dispatchEvent(evt);
     }
   }
 

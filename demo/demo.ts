@@ -80,6 +80,10 @@ document.body.appendChild(detailPanel);
 
 window.addEventListener("timeline-event-click", (e: Event) => {
   const m = (e as TimelineEventInteraction).detail.match;
+  if (m == null) {
+    return;
+  }
+
   detailPanel.textContent = `evt: ${m.label}\n\n
 duration: ${(m.end - m.start) / 1000} seconds
   `;
@@ -87,7 +91,12 @@ duration: ${(m.end - m.start) / 1000} seconds
 
 window.addEventListener("timeline-event-hover", (e: Event) => {
   const m = (e as TimelineEventInteraction).detail.match;
-  tooltip.textContent = `Duration: ${m.end - m.start}ms`;
+  if (m == null) {
+    tooltip.style.visibility = "hidden";
+  } else {
+    tooltip.style.visibility = "visible";
+    tooltip.textContent = `Duration: ${m.end - m.start}ms`;
+  }
 });
 
 document.body.appendChild(elm);
