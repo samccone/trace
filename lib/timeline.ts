@@ -92,17 +92,27 @@ export class Timeline {
       this.pointerDownPosition = null;
     });
 
+    let pendingScroll = false;
+
     window.addEventListener(
       "wheel",
       (e: WheelEvent) => {
         if (e.metaKey || e.ctrlKey) {
-          if (e.deltaY != null && e.deltaY < 0) {
-            this.renderer.zoomIn(this.lastMousePosition);
-          } else {
-            this.renderer.zoomOut(this.lastMousePosition);
+          e.preventDefault();
+
+          if (pendingScroll) {
+            return;
           }
 
-          e.preventDefault();
+          pendingScroll = true;
+          requestAnimationFrame(() => {
+            if (e.deltaY != null && e.deltaY < 0) {
+              this.renderer.zoomIn(this.lastMousePosition);
+            } else {
+              this.renderer.zoomOut(this.lastMousePosition);
+            }
+            pendingScroll = false;
+          });
         }
       },
       { passive: false }
