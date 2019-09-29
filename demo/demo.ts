@@ -52,6 +52,7 @@ const timeline = new Timeline(
 );
 
 const tooltip = document.createElement("div");
+tooltip.style.pointerEvents = "none";
 tooltip.style.zIndex = "10";
 tooltip.style.position = "fixed";
 tooltip.style.background = "#000";
