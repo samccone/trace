@@ -36,7 +36,7 @@ export interface RenderInstructions {
   rowMap: RowMap;
 }
 
-export interface TimelineEvent {
+export interface TimelineEvent<T=never> {
   // Start time in miliseconds
   start: number;
   // End time in miliseconds
@@ -53,7 +53,9 @@ export interface TimelineEvent {
   facet?: string;
 
   // Internal ID for Event tracking [Shared with RenderOp]
-  uuid: string;
+  uuid?: string;
+
+  datum?: T;
 }
 
 export type TimelineEvents = TimelineEvent[];

@@ -5,7 +5,7 @@ import {
   TimelineEvents,
   TimelineEventInteraction
 } from "../lib/format";
-import { d } from "../data/data4";
+import { d } from "../data/workplan";
 
 const elm = document.createElement("div");
 
@@ -85,7 +85,8 @@ window.addEventListener("timeline-event-click", (e: Event) => {
   }
 
   detailPanel.textContent = `evt: ${m.label}\n\n
-duration: ${(m.end - m.start) / 1000} seconds
+duration: ${(m.end - m.start) / 1000} seconds\n\n
+datum: ${JSON.stringify(m.datum || "N/A", null , 2)}
   `;
 });
 

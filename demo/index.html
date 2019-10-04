@@ -10,13 +10,17 @@
         display: block;
       }
       .detail-panel {
-        position: absolute;
+        position: fixed;
         top: 0;
         box-sizing: border-box;
         white-space: pre-wrap;
         word-break: break-all;
         padding: 20px;
         font-family: monospace;
+        z-index: 100;
+        overflow: auto;
+        max-height: 100vh;
+        border-left: solid 1px;
       }
     </style>
     <div id="root"></div>

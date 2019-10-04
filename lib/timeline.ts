@@ -230,7 +230,7 @@ export class Timeline {
           x: xUnit(d.start),
           y: yUnit(d.row || 0),
           width,
-          uuid: d.uuid,
+          uuid: d.uuid!,
           height: BANDHEIGHT,
           fill: fillColor,
           text: {
