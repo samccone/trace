@@ -1,0 +1,35 @@
+* {
+  font-family: "Barlow", sans-serif;
+  font-weight: 500;
+
+  /* Spacing */
+  --sp-4: 4px;
+  --sp-8: 8px;
+  --sp-12: 12px;
+  --sp-16: 16px;
+  --sp-24: 24px;
+  --sp-32: 32px;
+  --sp-48: 48px;
+  --sp-64: 64px;
+  --sp-96: 96px;
+  --sp-128: 128px;
+  --sp-192: 192px;
+  --sp-256: 256px;
+  --sp-384: 384px;
+  --sp-512: 512px;
+  --sp-640: 640px;
+  --sp-768: 768px;
+
+  /* Font sizes */
+  --ft-12: 12px;
+  --ft-14: 14px;
+  --ft-16: 16px;
+  --ft-18: 18px;
+  --ft-20: 20px;
+  --ft-24: 24px;
+  --ft-30: 30px;
+  --ft-36: 36px;
+  --ft-48: 48px;
+  --ft-60: 60px;
+  --ft-72: 72px;
+}

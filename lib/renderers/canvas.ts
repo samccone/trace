@@ -74,6 +74,7 @@ export class CanvasRenderer<T> implements Renderer {
     this.wrapper.style.position = "relative";
 
     this.canvas = document.createElement("canvas");
+    this.canvas.className = "trace";
     this.ctx = this.canvas.getContext("2d")!;
 
     this.canvas.style.pointerEvents = "none";
@@ -94,8 +95,8 @@ export class CanvasRenderer<T> implements Renderer {
     this.ySummary.style.top = `${this.margin.top}px`;
     this.validYBrush = false;
 
-    this.ySummary.style.border = `1px solid #cccccc`;
-    this.ySummary.style.borderRight = `1px solid black`;
+    // this.ySummary.style.border = `1px solid #cccccc`;
+    // this.ySummary.style.borderRight = `1px solid black`;
 
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
     this.ySummaryY = scaleLinear();
@@ -109,7 +110,7 @@ export class CanvasRenderer<T> implements Renderer {
     this.yAxis.style.top = `${this.margin.top}px`;
     this.yAxis.style.left = `${this.margin.left / 2}px`;
 
-    this.yAxis.style.borderRight = `1px solid black`;
+    // this.yAxis.style.borderRight = `1px solid black`;
 
     this.yAxisCtx = this.yAxis.getContext("2d")!;
 
@@ -121,8 +122,8 @@ export class CanvasRenderer<T> implements Renderer {
     this.xSummary.style.left = `${this.margin.left}px`;
     this.validXBrush = false;
 
-    this.xSummary.style.border = `1px solid #cccccc`;
-    this.xSummary.style.borderBottom = `1px solid black`;
+    // this.xSummary.style.border = `1px solid #cccccc`;
+    // this.xSummary.style.borderBottom = `1px solid black`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
     this.xSummaryY = scaleLinear().domain([1, 0]);
@@ -186,6 +187,7 @@ export class CanvasRenderer<T> implements Renderer {
     this.yAxis.height = dimensions.height - this.margin.top;
     this.yAxis.style.width = `${this.margin.left / 2}px`;
     this.yAxis.style.height = `${dimensions.height - this.margin.top}px`;
+    this.yAxisCtx.font = `normal normal 12px "Barlow"`;
 
     this.xSummary.width =
       dimensions.width - this.margin.left - this.margin.right;
@@ -203,9 +205,10 @@ export class CanvasRenderer<T> implements Renderer {
       this.margin.left -
       this.margin.right}px`;
     this.xAxis.style.height = `${this.margin.top / 2}px`;
+    this.xAxisCtx.font = `normal normal 12px "Barlow"`;
 
     // We need to set font alignment after resize.
-    this.ctx.font = "normal normal 10px monospace";
+    this.ctx.font = `normal normal 12px "Barlow"`;
     this.ctx.textBaseline = "top";
   }
 
@@ -360,8 +363,9 @@ export class CanvasRenderer<T> implements Renderer {
       ) {
         continue;
       }
+
       if (this.hoverUUID === opt.uuid || this.selectedUUID === opt.uuid) {
-        this.ctx.fillStyle = "red";
+        this.ctx.fillStyle = "#EE6F53";
       } else {
         this.ctx.fillStyle = opt.fill;
       }
@@ -377,9 +381,21 @@ export class CanvasRenderer<T> implements Renderer {
           this.ctx.fillStyle = opt.text.fill;
         }
 
+        const R = parseInt(opt.fill.slice(1, 3), 16);
+        const G = parseInt(opt.fill.slice(3, 5), 16);
+        const B = parseInt(opt.fill.slice(5, 7), 16);
+
+        if (R * 0.299 + G * 0.587 + B * 0.114 > 100) {
+          //dark font
+          this.ctx.fillStyle = "#26264B";
+        } else {
+          //light font
+          this.ctx.fillStyle = "#D0CFE2";
+        }
+
         this.ctx.fillText(
           opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
-          opt.x + (opt.text.offsetX || 0) - transformScrollX,
+          opt.x + (opt.text.offsetX || 0) - transformScrollX + 4,
           opt.y +
             (opt.text.offsetY || opt.height / 2 - fontSize / 2) -
             transformScrollY
@@ -431,7 +447,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.ySummaryY.domain([0, instructions.ySummary.length]);
 
-    this.ySummaryCtx.fillStyle = "#cccccc";
+    this.ySummaryCtx.fillStyle = "#575679";
 
     for (const yS of instructions.ySummary) {
       this.ySummaryCtx.fillRect(
@@ -440,7 +456,7 @@ export class CanvasRenderer<T> implements Renderer {
         this.ySummaryX(0) - this.ySummaryX(yS.pct),
         this.ySummaryY(1)
       );
-      this.yAxisCtx.fillStyle = "#b7b7d1";
+      this.yAxisCtx.fillStyle = "#BDBDCF";
 
       if (yS.y !== undefined && yS.height !== undefined) {
         this.yAxisCtx.fillRect(
@@ -450,19 +466,19 @@ export class CanvasRenderer<T> implements Renderer {
           yS.height * this.scale()
         );
 
-        this.yAxisCtx.fillStyle = "black";
+        this.yAxisCtx.fillStyle = "#575679";
 
         yS.text &&
           this.yAxisCtx.fillText(
             yS.text.slice(0, Math.floor(this.yAxis.width / fontSize) + 3),
-            0,
+            4,
             (yS.y - transformScrollY + yS.height / 2) * this.scale()
           );
       }
     }
 
-    this.ySummaryCtx.strokeStyle = "blue";
-    this.ySummaryCtx.fillStyle = "rgba(0,0,255,.1)";
+    this.ySummaryCtx.strokeStyle = "#C04949";
+    this.ySummaryCtx.fillStyle = "rgba(238,111,83,.2)";
     const yBrushCoords = this.ySummaryBrushRange();
 
     const yBrush: [number, number, number, number] = yBrushCoords.rect;
@@ -472,7 +488,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.xSummaryX.domain([0, instructions.xSummary.length]);
 
-    this.xSummaryCtx.fillStyle = "#cccccc";
+    this.xSummaryCtx.fillStyle = "#575679";
     const textDraws: Array<[string, number, number]> = [];
     for (const [i, xS] of instructions.xSummary.entries()) {
       this.xSummaryCtx.fillRect(
@@ -491,12 +507,12 @@ export class CanvasRenderer<T> implements Renderer {
           xS.width * this.scale(),
           this.xSummaryY(0) - this.xSummaryY(xS.pct)
         );
-        this.xAxisCtx.fillStyle = "black";
+        this.xAxisCtx.fillStyle = "#575679";
 
         if (xS.text && i % 3 === 0) {
           textDraws.push([
             xS.text,
-            (xS.x - transformScrollX) * this.scale(),
+            (xS.x - transformScrollX) * this.scale() + 4,
             this.xAxis.height
           ]);
         }
@@ -507,8 +523,8 @@ export class CanvasRenderer<T> implements Renderer {
       this.xAxisCtx.fillText(...d);
     }
 
-    this.xSummaryCtx.strokeStyle = "blue";
-    this.xSummaryCtx.fillStyle = "rgba(0,0,255,.1)";
+    this.xSummaryCtx.strokeStyle = "#C04949";
+    this.xSummaryCtx.fillStyle = "rgba(238,111,83,.2)";
     const xBrushCoords = this.xSummaryBrushRange();
 
     const xBrush: [number, number, number, number] = xBrushCoords.rect;

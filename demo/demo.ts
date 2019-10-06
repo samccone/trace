@@ -22,6 +22,35 @@ const renderer = new CanvasRenderer<Datum>(
   },
   elm
 );
+
+// const colors = [
+//   "#fa8775",
+//   "#cd34b5",
+//   "#bc55e3",
+//   "#8f8fff",
+//   "#69CDB9",
+//   "#ffd700"
+// ];
+
+const colors = [
+  "#ffd700",
+  "#7ad4f7",
+  // "#e14b4b",
+  // "#32b7ac",
+  // "#166c91",
+  // "#4949e7",
+  // "#f8846c",
+  "#a5a5ef",
+  "#bee3e0",
+  "#e5f6d0",
+  // "#6677BB",
+  // "#2d344f",
+  // "#73102f",
+  // "#66631d",
+  // "#3b165b",
+  "#116b64"
+];
+
 const timeline = new Timeline<Datum>(
   renderer,
   (d as TimelineEvent<Datum>[]).map((v: TimelineEvent<Datum>) => {
@@ -31,25 +60,25 @@ const timeline = new Timeline<Datum>(
   {
     toFill: ({ label }: { label: string }) => {
       if (label.indexOf("git remote -v") != -1) {
-        return "#fa8775";
+        return colors[0];
       }
 
       if (label.indexOf("git log") != -1) {
-        return "#cd34b5";
+        return colors[1];
       }
 
       if (label.indexOf("git config") != -1) {
-        return "#bc55e3";
+        return colors[2];
       }
 
       if (label.indexOf("git clean") != -1) {
-        return "#8f8fff";
+        return colors[3];
       }
 
       if (label.indexOf("git status") != -1) {
-        return "#69CDB9";
+        return colors[4];
       }
-      return "#ffd700";
+      return colors[5];
     }
   }
 );

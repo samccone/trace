@@ -1,11 +1,32 @@
 <!DOCTYPE html>
 <html>
   <body>
+    <link
+      href="https://fonts.googleapis.com/css?family=Barlow:500&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./design-system.css" rel="stylesheet" />
+
     <style>
       * {
         margin: 0;
         padding: 0;
       }
+
+      body {
+        background: #eaeaed;
+      }
+
+      canvas.ySummary,
+      canvas.xSummary {
+        box-shadow: 0 2px 0 hsla(0, 0%, 100%, 0.15),
+          inset 2px 2px hsla(0, 0%, 0%, 0.1);
+      }
+
+      .detail-panel {
+        background: white;
+      }
+
       canvas {
         display: block;
       }
@@ -21,7 +42,6 @@
         overflow: auto;
         height: 100vh;
         max-height: 100vh;
-        border-left: solid 1px;
       }
     </style>
     <div id="root"></div>

@@ -209,7 +209,7 @@ export class Timeline<T> {
       .domain([xMin || 0, (xMin || 0) + (median.end - median.start)])
       .range([0, 100]);
 
-    const PADDING = 0.3;
+    const PADDING = 0.2;
     const BANDHEIGHT = 20;
 
     const yUnit = scaleLinear().range([0, BANDHEIGHT * (1 + PADDING)]);
