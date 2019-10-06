@@ -6,6 +6,7 @@ export class Tooltip<T> {
 
   constructor(private target: HTMLElement) {
     this.tooltip = document.createElement("div");
+    this.tooltip.className = "tooltip";
     this.setEventListeners();
     this.setStyles();
     document.body.appendChild(this.tooltip);
@@ -17,9 +18,10 @@ export class Tooltip<T> {
     this.tooltip.style.position = "fixed";
     this.tooltip.style.background = "#000";
     this.tooltip.style.color = "white";
-    this.tooltip.style.padding = "5px";
-    this.tooltip.style.fontSize = "10px";
-    this.tooltip.style.transform = "translateX(-50%) translateY(-140%)";
+    this.tooltip.style.padding = "8px";
+    this.tooltip.style.fontSize = "12px";
+    this.tooltip.style.transform =
+      "translateX(-50%) translateY(-100%) translateY(-10px)";
     this.tooltip.style.borderRadius = "3px";
   }
 

@@ -2,7 +2,7 @@ import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
 import { TimelineEvent, TimelineEventInteraction } from "../lib/format";
-
+import { d } from "../data/workplan";
 // If your data has a custom datum you can pass it here.
 type Datum = never;
 
@@ -22,15 +22,6 @@ const renderer = new CanvasRenderer<Datum>(
   },
   elm
 );
-
-// const colors = [
-//   "#fa8775",
-//   "#cd34b5",
-//   "#bc55e3",
-//   "#8f8fff",
-//   "#69CDB9",
-//   "#ffd700"
-// ];
 
 const colors = [
   "#ffd700",
