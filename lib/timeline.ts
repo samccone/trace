@@ -62,7 +62,7 @@ export class Timeline {
       this.shiftDown = e.shiftKey;
     });
 
-    window.addEventListener("pointermove", (e: any) => {
+    this.renderer.target.addEventListener("pointermove", (e: any) => {
       const currentPosition = { x: e.layerX, y: e.layerY, target: e.target };
       this.renderer.mouseMove(currentPosition);
 
@@ -105,12 +105,12 @@ export class Timeline {
       this.lastMousePosition = currentPosition;
     });
 
-    window.addEventListener("pointerdown", (e: any) => {
+    this.renderer.target.addEventListener("pointerdown", (e: any) => {
       this.pointerDown = true;
       this.pointerDownPosition = { x: e.layerX, y: e.layerY, target: e.target };
     });
 
-    window.addEventListener("pointerup", (_: PointerEvent) => {
+    this.renderer.target.addEventListener("pointerup", (_: any) => {
       if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
         this.renderer.click(this.pointerDownPosition, this.shiftDown);
       } else if (this.dragging) {
