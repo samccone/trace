@@ -14,8 +14,6 @@ export abstract class Renderer {
 
   abstract zoomOut(mousePosition: { x: number; y: number }): void;
 
-  abstract grab(): void;
-
   abstract startDragging(
     mousePosition: {
       x: number;

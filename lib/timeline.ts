@@ -60,7 +60,6 @@ export class Timeline {
 
     window.addEventListener("keyup", (e: any) => {
       this.shiftDown = e.shiftKey;
-      this.renderer.grab();
     });
 
     window.addEventListener("pointermove", (e: any) => {
@@ -101,8 +100,6 @@ export class Timeline {
       } else {
         if (this.shiftDown) {
           this.renderer.range();
-        } else {
-          this.renderer.grab();
         }
       }
       this.lastMousePosition = currentPosition;

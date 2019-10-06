@@ -1,4 +1,5 @@
 import { Renderer } from "./renderer";
+import { Cursor } from "../cursor";
 import {
   RenderInstructions,
   TimelineEvent,
@@ -50,6 +51,7 @@ export class CanvasRenderer implements Renderer {
   private margin: { top: number; left: number; right: number };
   private hoverUUID: string | undefined;
   private selectedUUID: string | undefined;
+  private cursor: Cursor;
 
   constructor(
     public dimensions: {
@@ -59,6 +61,7 @@ export class CanvasRenderer implements Renderer {
     },
     public readonly target: HTMLElement
   ) {
+    this.cursor = new Cursor(target);
     this.margin = this.dimensions.margin || { top: 100, left: 100, right: 200 };
     this.selectedRange = { start: null, end: null };
     this.overflowElm = document.createElement("div");
@@ -578,10 +581,6 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  grab() {
-    this.target.style.cursor = "grab";
-  }
-
   startDragging({
     x,
     y,
@@ -591,7 +590,7 @@ export class CanvasRenderer implements Renderer {
     y: number;
     target: HTMLCanvasElement;
   }) {
-    this.target.style.cursor = "grabbing";
+    this.cursor.grab();
 
     if (target === this.ySummary) {
       const yBrushCoords = this.ySummaryBrushRange();
@@ -607,7 +606,7 @@ export class CanvasRenderer implements Renderer {
   }
 
   stopDragging() {
-    this.target.style.cursor = "initial";
+    this.cursor.ungrab();
     this.validYBrush = false;
     this.validXBrush = false;
   }
@@ -722,10 +721,12 @@ export class CanvasRenderer implements Renderer {
     if (match != null && match.uuid !== this.hoverUUID) {
       this.hoverUUID = match.uuid;
       this.render(this.lastOps);
+      this.cursor.point();
       window.dispatchEvent(evt);
     }
 
     if (match == null) {
+      this.cursor.unset();
       window.dispatchEvent(evt);
     }
   }
