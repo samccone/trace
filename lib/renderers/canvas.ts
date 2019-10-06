@@ -389,27 +389,43 @@ export class CanvasRenderer implements Renderer {
     if (this.selectedRange.start !== null) {
       this.ctx.fillStyle = "rgba(0,0,255,.2)";
       this.ctx.strokeStyle = "blue";
+      const startX =
+        this.selectedRange.start.x > this.selectedRange.end!.x
+          ? this.selectedRange.start.x
+          : this.selectedRange.end!.x;
+      const startY =
+        this.selectedRange.start.y > this.selectedRange.end!.y
+          ? this.selectedRange.start.y
+          : this.selectedRange.end!.y;
+      const endX =
+        this.selectedRange.start.x < this.selectedRange.end!.x
+          ? this.selectedRange.start.x
+          : this.selectedRange.end!.x;
+      const endY =
+        this.selectedRange.start.y < this.selectedRange.end!.y
+          ? this.selectedRange.start.y
+          : this.selectedRange.end!.y;
+
       const selectedRect: [number, number, number, number] = [
-        this.selectedRange.start.x - transformScrollX,
-        this.selectedRange.start.y - transformScrollY,
-        (this.selectedRange.end &&
-          Math.max(this.selectedRange.end.x - this.selectedRange.start.x, 0)) ||
-          0,
-        (this.selectedRange.end &&
-          Math.max(this.selectedRange.end.y - this.selectedRange.start.y, 0)) ||
-          0
+        startX - transformScrollX,
+        startY - transformScrollY,
+        endX - startX,
+        endY - startY
       ];
+
       this.ctx.fillRect(...selectedRect);
       this.ctx.strokeRect(...selectedRect);
       this.ctx.fillStyle = "black";
       this.selectedRange.end &&
         this.ctx.fillText(
-          Math.round(
-            this.lastOps.xUnit.invert(this.selectedRange.end.x) -
-              this.lastOps.xUnit.invert(this.selectedRange.start.x)
+          Math.abs(
+            Math.round(
+              this.lastOps.xUnit.invert(this.selectedRange.end.x) -
+                this.lastOps.xUnit.invert(this.selectedRange.start.x)
+            )
           ) + " ms",
           selectedRect[0] + selectedRect[2] / 2,
-          selectedRect[1] + selectedRect[3]
+          selectedRect[1] - 15
         );
     }
 
