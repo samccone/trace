@@ -1,5 +1,6 @@
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
+import { Tooltip } from '../lib/tooltip';
 import {
   TimelineEvent,
   TimelineEvents,
@@ -55,22 +56,7 @@ const timeline = new Timeline(
   }
 );
 
-const tooltip = document.createElement("div");
-tooltip.style.pointerEvents = "none";
-tooltip.style.zIndex = "10";
-tooltip.style.position = "fixed";
-tooltip.style.background = "#000";
-tooltip.style.color = "white";
-tooltip.style.padding = "5px";
-tooltip.style.fontSize = "10px";
-tooltip.style.transform = "translateX(-50%) translateY(-140%)";
-tooltip.style.borderRadius = "3px";
-document.body.appendChild(tooltip);
-
-window.addEventListener("mousemove", e => {
-  tooltip.style.top = `${e.clientY}px`;
-  tooltip.style.left = `${e.clientX}px`;
-});
+new Tooltip(renderer.target);
 
 const detailPanel = document.createElement("div");
 detailPanel.classList.add("detail-panel");
@@ -88,16 +74,6 @@ window.addEventListener("timeline-event-click", (e: Event) => {
 duration: ${(m.end - m.start) / 1000} seconds\n\n
 datum: ${JSON.stringify(m.datum || "N/A", null , 2)}
   `;
-});
-
-window.addEventListener("timeline-event-hover", (e: Event) => {
-  const m = (e as TimelineEventInteraction).detail.match;
-  if (m == null) {
-    tooltip.style.visibility = "hidden";
-  } else {
-    tooltip.style.visibility = "visible";
-    tooltip.textContent = `Duration: ${m.end - m.start}ms`;
-  }
 });
 
 document.body.appendChild(elm);
