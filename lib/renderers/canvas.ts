@@ -2,8 +2,8 @@ import { Renderer } from "./renderer";
 import { Cursor } from "../cursor";
 import {
   RenderInstructions,
-  TimelineEvent,
-  TimelineEventInteraction
+  TimelineEventInteraction,
+  InternalTimelineEvent
 } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
@@ -11,7 +11,7 @@ import { binarySearch } from "../search";
 const ZOOM_AMOUNT = 0.1;
 const MIN_ZOOM = 0.1;
 
-export class CanvasRenderer implements Renderer {
+export class CanvasRenderer<T> implements Renderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private wrapper: HTMLElement;
@@ -46,7 +46,7 @@ export class CanvasRenderer implements Renderer {
   private marginWrapper: HTMLElement;
   private timeline: HTMLElement;
   private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
-  private lastOps?: RenderInstructions;
+  private lastOps?: RenderInstructions<T>;
   private zoomLevel: number = 1;
   private margin: { top: number; left: number; right: number };
   private hoverUUID: string | undefined;
@@ -335,7 +335,7 @@ export class CanvasRenderer implements Renderer {
     this.xAxisCtx.clearRect(0, 0, this.xAxis.width, this.xAxis.height);
   }
 
-  private internalRender(instructions: RenderInstructions) {
+  private internalRender(instructions: RenderInstructions<T>) {
     this.lastOps = instructions;
     this.clearAll();
     this.overflowElm.style.width = `${this.margin.left +
@@ -585,7 +585,7 @@ export class CanvasRenderer implements Renderer {
       this.selectedUUID = undefined;
       if (match != null) {
         this.selectedUUID = match.uuid;
-        const evt: TimelineEventInteraction = new CustomEvent(
+        const evt: TimelineEventInteraction<T> = new CustomEvent(
           "timeline-event-click",
           {
             detail: { match }
@@ -685,7 +685,7 @@ export class CanvasRenderer implements Renderer {
   private entryFromPosition(mousePosition: {
     x: number;
     y: number;
-  }): TimelineEvent | undefined {
+  }): InternalTimelineEvent<T> | undefined {
     if (this.lastOps == null) {
       return undefined;
     }
@@ -703,7 +703,7 @@ export class CanvasRenderer implements Renderer {
   }
 
   private visibleRows(
-    renderInstructions: RenderInstructions
+    renderInstructions: RenderInstructions<T>
   ): { min: number; max: number } {
     return {
       min: Math.floor(
@@ -727,7 +727,7 @@ export class CanvasRenderer implements Renderer {
 
     if (shiftDown) {
       this.hoverUUID = undefined;
-      const evt: TimelineEventInteraction = new CustomEvent(
+      const evt: TimelineEventInteraction<T> = new CustomEvent(
         "timeline-event-hover",
         {
           detail: { match: undefined }
@@ -746,7 +746,7 @@ export class CanvasRenderer implements Renderer {
       return;
     }
 
-    const evt: TimelineEventInteraction = new CustomEvent(
+    const evt: TimelineEventInteraction<T> = new CustomEvent(
       "timeline-event-hover",
       {
         detail: { match: match }
@@ -766,7 +766,7 @@ export class CanvasRenderer implements Renderer {
     }
   }
 
-  render(instructions: RenderInstructions) {
+  render(instructions: RenderInstructions<T>) {
     if (this.pendingRender) {
       return;
     }

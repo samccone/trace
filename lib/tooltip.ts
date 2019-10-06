@@ -1,6 +1,6 @@
 import { TimelineEventInteraction } from "../lib/format";
 
-export class Tooltip {
+export class Tooltip<T> {
   private tooltip: HTMLElement;
   private pendingMove: { x: number; y: number } | null = null;
 
@@ -48,7 +48,7 @@ export class Tooltip {
     });
 
     window.addEventListener("timeline-event-hover", (e: Event) => {
-      const m = (e as TimelineEventInteraction).detail.match;
+      const m = (e as TimelineEventInteraction<T>).detail.match;
       if (m == null) {
         this.tooltip.style.visibility = "hidden";
       } else {

@@ -1,11 +1,11 @@
 import { ScaleLinear } from "d3-scale";
 
-export interface RowMap {
-  [idx: string]: TimelineEvent[];
+export interface RowMap<T> {
+  [idx: string]: InternalTimelineEvent<T>[];
 }
 
-export type TimelineEventInteraction = CustomEvent<{
-  match: TimelineEvent | undefined;
+export type TimelineEventInteraction<T> = CustomEvent<{
+  match: TimelineEvent<T> | undefined;
 }>;
 
 export interface RenderOp {
@@ -25,7 +25,7 @@ export interface RenderOp {
   uuid: string;
 }
 
-export interface RenderInstructions {
+export interface RenderInstructions<T> {
   opts: RenderOp[];
   xMax: number;
   yMax: number;
@@ -33,32 +33,36 @@ export interface RenderInstructions {
   yUnit: ScaleLinear<number, number>;
   ySummary: SummaryEvent[];
   xSummary: SummaryEvent[];
-  rowMap: RowMap;
+  rowMap: RowMap<T>;
 }
 
-export interface TimelineEvent<T=never> {
+export interface TimelineEvent<T = never> {
   // Start time in miliseconds
   start: number;
+
   // End time in miliseconds
   end: number;
-  // End time - Start time in miliseconds
-  duration?: number;
+
   // Text label to be associated with the timeline entry
   label: string;
+
   // Process / Thread that the events are associated with.
   rowId: string;
-  // Process / Thread index
-  row?: number;
 
-  facet?: string;
-
-  // Internal ID for Event tracking [Shared with RenderOp]
-  uuid?: string;
-
+  // Optional additional data you want associated with each event
+  // [helpful for rendering debugging info]
   datum?: T;
 }
 
-export type TimelineEvents = TimelineEvent[];
+export interface InternalTimelineEvent<T = never> extends TimelineEvent<T> {
+  // End time - Start time in miliseconds
+  duration?: number;
+  // Process / Thread index
+  row?: number;
+  facet?: string;
+  // Internal ID for Event tracking [Shared with RenderOp]
+  uuid?: string;
+}
 
 export interface SummaryEvent {
   index: number;

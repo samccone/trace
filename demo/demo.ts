@@ -1,18 +1,16 @@
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
-import {
-  TimelineEvent,
-  TimelineEvents,
-  TimelineEventInteraction
-} from "../lib/format";
-import { d } from "../data/workplan";
+import { TimelineEvent, TimelineEventInteraction } from "../lib/format";
+
+// If your data has a custom datum you can pass it here.
+type Datum = never;
 
 const elm = document.createElement("div");
 
 const panelWidth = 400;
 
-const renderer = new CanvasRenderer(
+const renderer = new CanvasRenderer<Datum>(
   {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -24,14 +22,14 @@ const renderer = new CanvasRenderer(
   },
   elm
 );
-const timeline = new Timeline(
+const timeline = new Timeline<Datum>(
   renderer,
-  (d as TimelineEvents).map((v: TimelineEvent) => {
+  (d as TimelineEvent<Datum>[]).map((v: TimelineEvent<Datum>) => {
     v.label = v.label.replace(`['/bin/bash', '-c', '`, "");
     return v;
   }),
   {
-    toFill: ({ label }: TimelineEvent) => {
+    toFill: ({ label }: { label: string }) => {
       if (label.indexOf("git remote -v") != -1) {
         return "#fa8775";
       }
@@ -56,7 +54,7 @@ const timeline = new Timeline(
   }
 );
 
-new Tooltip(renderer.target);
+new Tooltip<Datum>(renderer.target);
 
 const detailPanel = document.createElement("div");
 detailPanel.classList.add("detail-panel");
@@ -65,7 +63,7 @@ detailPanel.style.width = `${panelWidth}px`;
 document.body.appendChild(detailPanel);
 
 window.addEventListener("timeline-event-click", (e: Event) => {
-  const m = (e as TimelineEventInteraction).detail.match;
+  const m = (e as TimelineEventInteraction<Datum>).detail.match;
   if (m == null) {
     return;
   }

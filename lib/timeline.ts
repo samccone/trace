@@ -1,10 +1,10 @@
 import { Renderer } from "./renderers/renderer";
 import {
-  TimelineEvents,
   TimelineEvent,
   RenderInstructions,
   RenderOp,
-  RowMap
+  RowMap,
+  InternalTimelineEvent
 } from "./format";
 import { scaleLinear } from "d3-scale";
 import { uuid } from "./uuid";
@@ -21,7 +21,7 @@ const formatDate = (d: Date) => {
   )}:${padNumbers(d.getSeconds())}`;
 };
 
-export class Timeline {
+export class Timeline<T> {
   private dragging = false;
   private pointerDown = false;
   private shiftDown = false;
@@ -40,13 +40,13 @@ export class Timeline {
     x: 0,
     y: 0
   };
-  private lastRenderOps: RenderInstructions | undefined;
+  private lastRenderOps: RenderInstructions<T> | undefined;
 
   constructor(
     public readonly renderer: Renderer,
-    public readonly data: TimelineEvents,
+    public readonly data: TimelineEvent[],
     private readonly opts: {
-      toFill?: (t: TimelineEvent) => string;
+      toFill?: (t: { label: string }) => string;
     } = {}
   ) {
     this.setListeners();
@@ -154,49 +154,51 @@ export class Timeline {
     );
   }
 
-  transformData(data: TimelineEvents) {
+  transformData<T>(data: TimelineEvent<T>[]): RenderInstructions<T> {
     let xMin: number | undefined = Infinity;
     let xMax: number | undefined;
     let facets: string[] = [];
     let rows: string[] = [];
-    let rowMap: RowMap = {};
+    let rowMap: RowMap<T> = {};
 
-    data = data.map(d => {
-      if (!xMin || d.start < xMin) {
-        xMin = d.start;
+    const internalData: InternalTimelineEvent<T>[] = data.map(
+      (d: InternalTimelineEvent<T>) => {
+        if (!xMin || d.start < xMin) {
+          xMin = d.start;
+        }
+
+        if (!xMax || d.end > xMax) {
+          xMax = d.end;
+        }
+
+        d.duration = d.end - d.start;
+
+        if (rows.indexOf(d.rowId + "") === -1) {
+          rows.push(d.rowId + "");
+        }
+        const r = rows.indexOf(d.rowId + "");
+        d.row = r;
+        d.uuid = uuid();
+
+        const stringR = r + "";
+        if (!rowMap[stringR]) {
+          rowMap[stringR] = [];
+        }
+        rowMap[stringR].push(d);
+
+        if (
+          d.facet &&
+          typeof d.facet === "string" &&
+          facets.indexOf(d.facet) === -1
+        ) {
+          facets.push(d.facet);
+        }
+
+        return d;
       }
+    );
 
-      if (!xMax || d.end > xMax) {
-        xMax = d.end;
-      }
-
-      d.duration = d.end - d.start;
-
-      if (rows.indexOf(d.rowId + "") === -1) {
-        rows.push(d.rowId + "");
-      }
-      const r = rows.indexOf(d.rowId + "");
-      d.row = r;
-      d.uuid = uuid();
-
-      const stringR = r + "";
-      if (!rowMap[stringR]) {
-        rowMap[stringR] = [];
-      }
-      rowMap[stringR].push(d);
-
-      if (
-        d.facet &&
-        typeof d.facet === "string" &&
-        facets.indexOf(d.facet) === -1
-      ) {
-        facets.push(d.facet);
-      }
-
-      return d;
-    });
-
-    const sortedData = data.sort((a, b) => {
+    const sortedData = internalData.sort((a, b) => {
       return a.end - a.start - (b.end - b.start);
     });
 
@@ -212,7 +214,7 @@ export class Timeline {
 
     const yUnit = scaleLinear().range([0, BANDHEIGHT * (1 + PADDING)]);
 
-    const opts = data.reduce(
+    const opts = internalData.reduce(
       (p, d) => {
         const width = xUnit(d.end) - xUnit(d.start);
 
@@ -302,7 +304,7 @@ export class Timeline {
   }
 
   render() {
-    const renderData = this.transformData(this.data);
+    const renderData = this.transformData<T>(this.data);
     this.lastRenderOps = renderData;
     this.renderer.render(renderData);
   }
