@@ -1,6 +1,6 @@
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
-import { Tooltip } from '../lib/tooltip';
+import { Tooltip } from "../lib/tooltip";
 import {
   TimelineEvent,
   TimelineEvents,
@@ -72,7 +72,7 @@ window.addEventListener("timeline-event-click", (e: Event) => {
 
   detailPanel.textContent = `evt: ${m.label}\n\n
 duration: ${(m.end - m.start) / 1000} seconds\n\n
-datum: ${JSON.stringify(m.datum || "N/A", null , 2)}
+datum: ${JSON.stringify(m.datum || "N/A", null, 2)}
   `;
 });
 

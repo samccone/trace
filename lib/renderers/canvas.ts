@@ -637,11 +637,12 @@ export class CanvasRenderer implements Renderer {
   }
 
   range() {
-    this.target.style.cursor = "crosshair";
+    this.cursor.range();
   }
 
   startRange({ x, y }: { x: number; y: number; target: HTMLCanvasElement }) {
     const pos = this.toTimelinePosition({ x, y });
+    this.cursor.range();
 
     if (this.lastOps) {
       this.selectedRange.start = {
@@ -661,7 +662,9 @@ export class CanvasRenderer implements Renderer {
     this.render(this.lastOps!);
   }
 
-  stopRange() {}
+  stopRange() {
+    this.cursor.unrange();
+  }
 
   private entryFromPosition(mousePosition: {
     x: number;

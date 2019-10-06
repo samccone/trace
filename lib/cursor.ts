@@ -1,4 +1,4 @@
-type PointerStates = "initial" | "pointer" | "grabbing";
+type PointerStates = "initial" | "pointer" | "grabbing" | "crosshair";
 
 export class Cursor {
   private state: PointerStates = "initial";
@@ -7,6 +7,14 @@ export class Cursor {
 
   grab() {
     this.setState("grabbing");
+  }
+
+  range() {
+    this.setState("crosshair");
+  }
+
+  unrange() {
+    this.setState("initial", { force: true });
   }
 
   ungrab() {
