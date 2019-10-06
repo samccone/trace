@@ -55,5 +55,8 @@ export abstract class Renderer {
     shiftDown: Boolean
   ): void;
 
-  abstract mouseMove(mousePosition: { x: number; y: number }): void;
+  abstract mouseMove(
+    mousePosition: { x: number; y: number },
+    opts: { shiftDown: boolean }
+  ): void;
 }

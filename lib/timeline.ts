@@ -64,7 +64,7 @@ export class Timeline {
 
     this.renderer.target.addEventListener("pointermove", (e: any) => {
       const currentPosition = { x: e.layerX, y: e.layerY, target: e.target };
-      this.renderer.mouseMove(currentPosition);
+      this.renderer.mouseMove(currentPosition, { shiftDown: this.shiftDown });
 
       if (this.pointerDown) {
         if (!this.dragging && !this.draggingRange) {

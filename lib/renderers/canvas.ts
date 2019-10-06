@@ -717,8 +717,25 @@ export class CanvasRenderer implements Renderer {
     };
   }
 
-  mouseMove(mousePosition: { x: number; y: number }) {
+  mouseMove(
+    mousePosition: { x: number; y: number },
+    { shiftDown }: { shiftDown: boolean }
+  ) {
     if (this.lastOps == null) {
+      return;
+    }
+
+    if (shiftDown) {
+      this.hoverUUID = undefined;
+      const evt: TimelineEventInteraction = new CustomEvent(
+        "timeline-event-hover",
+        {
+          detail: { match: undefined }
+        }
+      );
+
+      window.dispatchEvent(evt);
+
       return;
     }
 
@@ -726,7 +743,6 @@ export class CanvasRenderer implements Renderer {
 
     if (match == null && this.hoverUUID != null) {
       this.hoverUUID = undefined;
-      this.render(this.lastOps);
       return;
     }
 
