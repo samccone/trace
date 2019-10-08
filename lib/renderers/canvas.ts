@@ -7,6 +7,8 @@ import {
 } from "../format";
 import { scaleLinear, ScaleLinear } from "d3-scale";
 import { binarySearch } from "../search";
+import { Theme } from "../format";
+import { toRGB } from "../hex";
 
 const ZOOM_AMOUNT = 0.1;
 const MIN_ZOOM = 0.1;
@@ -59,6 +61,7 @@ export class CanvasRenderer<T> implements Renderer {
       height: number;
       margin?: { top: number; left: number; right: number };
     },
+    public readonly theme: Theme,
     public readonly target: HTMLElement
   ) {
     this.cursor = new Cursor(target);
@@ -381,7 +384,7 @@ export class CanvasRenderer<T> implements Renderer {
       }
 
       if (this.hoverUUID === opt.uuid || this.selectedUUID === opt.uuid) {
-        this.ctx.fillStyle = "#EE6F53";
+        this.ctx.fillStyle = this.theme.active;
       } else {
         this.ctx.fillStyle = opt.fill;
       }
@@ -397,9 +400,7 @@ export class CanvasRenderer<T> implements Renderer {
           this.ctx.fillStyle = opt.text.fill;
         }
 
-        const R = parseInt(opt.fill.slice(1, 3), 16);
-        const G = parseInt(opt.fill.slice(3, 5), 16);
-        const B = parseInt(opt.fill.slice(5, 7), 16);
+        const [R, G, B] = toRGB(opt.fill);
 
         if (R * 0.299 + G * 0.587 + B * 0.114 > 100) {
           //dark font
@@ -419,8 +420,9 @@ export class CanvasRenderer<T> implements Renderer {
       }
     }
     if (this.selectedRange.start !== null) {
-      this.ctx.fillStyle = "rgba(0,0,255,.2)";
-      this.ctx.strokeStyle = "blue";
+      const [R, G, B] = toRGB(this.theme.active);
+      this.ctx.fillStyle = `rgba(${R},${G},${B},0.2)`;
+      this.ctx.strokeStyle = this.theme.active;
       const startX =
         this.selectedRange.start.x > this.selectedRange.end!.x
           ? this.selectedRange.start.x
@@ -493,8 +495,9 @@ export class CanvasRenderer<T> implements Renderer {
       }
     }
 
-    this.ySummaryCtx.strokeStyle = "#C04949";
-    this.ySummaryCtx.fillStyle = "rgba(238,111,83,.2)";
+    const [R, G, B] = toRGB(this.theme.active);
+    this.ySummaryCtx.strokeStyle = this.theme.active;
+    this.ySummaryCtx.fillStyle = `rgba(${R},${G},${B},0.2)`;
     const yBrushCoords = this.ySummaryBrushRange();
 
     const yBrush: [number, number, number, number] = yBrushCoords.rect;
@@ -539,8 +542,12 @@ export class CanvasRenderer<T> implements Renderer {
       this.xAxisCtx.fillText(...d);
     }
 
-    this.xSummaryCtx.strokeStyle = "#C04949";
-    this.xSummaryCtx.fillStyle = "rgba(238,111,83,.2)";
+    {
+      const [R, G, B] = toRGB(this.theme.active);
+      this.xSummaryCtx.strokeStyle = this.theme.active;
+      this.xSummaryCtx.fillStyle = `rgba(${R},${G},${B},0.2)`;
+    }
+
     const xBrushCoords = this.xSummaryBrushRange();
 
     const xBrush: [number, number, number, number] = xBrushCoords.rect;

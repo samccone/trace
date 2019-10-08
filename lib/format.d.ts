@@ -8,6 +8,10 @@ export type TimelineEventInteraction<T> = CustomEvent<{
   match: TimelineEvent<T> | undefined;
 }>;
 
+export interface Theme {
+  active: string;
+}
+
 export interface RenderOp {
   x: number;
   y: number;

@@ -1,3 +1,5 @@
+import theme from '../lib/themes/default';
+
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
@@ -20,6 +22,7 @@ const renderer = new CanvasRenderer<Datum>(
       left: 100
     }
   },
+  theme,
   elm
 );
 
