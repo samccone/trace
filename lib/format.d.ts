@@ -46,6 +46,9 @@ export interface TimelineEvent<T = never> {
   // Text label to be associated with the timeline entry
   label: string;
 
+  // Additional [optiona] text based information to bucket events by.
+  facet?: string;
+
   // Process / Thread that the events are associated with.
   rowId: string;
 
@@ -59,7 +62,6 @@ export interface InternalTimelineEvent<T = never> extends TimelineEvent<T> {
   duration?: number;
   // Process / Thread index
   row?: number;
-  facet?: string;
   // Internal ID for Event tracking [Shared with RenderOp]
   uuid?: string;
 }
