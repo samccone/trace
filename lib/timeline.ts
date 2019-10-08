@@ -55,7 +55,9 @@ export class Timeline<T> {
   private setListeners() {
     window.addEventListener("keydown", (e: any) => {
       this.shiftDown = e.shiftKey;
-      this.renderer.range();
+      if (this.shiftDown) {
+        this.renderer.range();
+      }
     });
 
     window.addEventListener("keyup", (e: any) => {
