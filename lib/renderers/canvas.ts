@@ -236,6 +236,22 @@ export class CanvasRenderer<T> implements Renderer {
     return this.zoomLevel;
   }
 
+  private overMargin({ x, y }: { x: number; y: number }): boolean {
+    if (x <= this.margin.left) {
+      return true;
+    }
+
+    if (y <= this.margin.top) {
+      return true;
+    }
+
+    if (x >= this.dimensions.width - this.margin.right) {
+      return true;
+    }
+
+    return false;
+  }
+
   private toTimelinePosition({
     x,
     y
@@ -741,8 +757,9 @@ export class CanvasRenderer<T> implements Renderer {
       return;
     }
 
-    if (shiftDown) {
+    if (shiftDown || this.overMargin(mousePosition)) {
       this.hoverUUID = undefined;
+      this.cursor.unset();
       const evt: TimelineEventInteraction<T> = new CustomEvent(
         "timeline-event-hover",
         {
@@ -751,7 +768,7 @@ export class CanvasRenderer<T> implements Renderer {
       );
 
       window.dispatchEvent(evt);
-
+      this.render(this.lastOps);
       return;
     }
 
