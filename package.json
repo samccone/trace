@@ -1,4 +1,6 @@
 {
+  "name": "timeline-viz",
+  "version": "0.1.0",
   "dependencies": {
     "d3-scale": "3.1.0"
   },
