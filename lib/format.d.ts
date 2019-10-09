@@ -1,4 +1,4 @@
-import { ScaleLinear } from "d3-scale";
+import { ScaleLinear } from "d3";
 
 export interface RowMap<T> {
   [idx: string]: InternalTimelineEvent<T>[];

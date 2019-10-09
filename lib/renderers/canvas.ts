@@ -5,7 +5,7 @@ import {
   TimelineEventInteraction,
   InternalTimelineEvent
 } from "../format";
-import { scaleLinear, ScaleLinear } from "d3-scale";
+import { scaleLinear, ScaleLinear } from "d3";
 import { binarySearch } from "../search";
 import { Theme } from "../format";
 import { toRGB } from "../hex";

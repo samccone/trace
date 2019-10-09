@@ -6,7 +6,7 @@ import {
   RowMap,
   InternalTimelineEvent
 } from "./format";
-import { scaleLinear } from "d3-scale";
+import { scaleLinear } from "d3";
 import { uuid } from "./uuid";
 
 const padNumbers = (num: number) => {
