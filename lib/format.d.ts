@@ -8,6 +8,10 @@ export type TimelineEventInteraction<T> = CustomEvent<{
   match: TimelineEvent<T> | undefined;
 }>;
 
+export type TimelineZoomEvent = CustomEvent<{
+  direction: "IN" | "OUT";
+}>;
+
 export interface Theme {
   active: string;
 }

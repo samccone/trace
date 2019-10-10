@@ -4,7 +4,8 @@ import {
   RenderInstructions,
   RenderOp,
   RowMap,
-  InternalTimelineEvent
+  InternalTimelineEvent,
+  TimelineZoomEvent
 } from "./format";
 import { scaleLinear } from "d3";
 import { uuid } from "./uuid";
@@ -41,7 +42,7 @@ export class Timeline<T> {
     y: 0
   };
   private lastRenderOps: RenderInstructions<T> | undefined;
-
+  private xRange: [number, number] = [0, 100];
   constructor(
     public readonly renderer: Renderer,
     public readonly data: TimelineEvent[],
@@ -131,6 +132,16 @@ export class Timeline<T> {
 
     let pendingScroll = false;
 
+    window.addEventListener("timeline-zoom-time", (e: Event) => {
+      if ((e as TimelineZoomEvent).detail.direction === "OUT") {
+        this.xRange = [this.xRange[0], this.xRange[1] / 1.5];
+      } else {
+        this.xRange = [this.xRange[0], this.xRange[1] * 1.5];
+      }
+
+      this.render();
+    });
+
     window.addEventListener(
       "wheel",
       (e: WheelEvent) => {
@@ -209,7 +220,7 @@ export class Timeline<T> {
 
     const xUnit = scaleLinear()
       .domain([xMin || 0, (xMin || 0) + (median.end - median.start)])
-      .range([0, 100]);
+      .range(this.xRange);
 
     const PADDING = 0.2;
     const BANDHEIGHT = 20;

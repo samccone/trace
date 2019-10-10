@@ -3,7 +3,8 @@ import { Cursor } from "../cursor";
 import {
   RenderInstructions,
   TimelineEventInteraction,
-  InternalTimelineEvent
+  InternalTimelineEvent,
+  TimelineZoomEvent
 } from "../format";
 import { scaleLinear, ScaleLinear } from "d3";
 import { binarySearch } from "../search";
@@ -244,16 +245,20 @@ export class CanvasRenderer<T> implements Renderer {
     return this.zoomLevel;
   }
 
+  private overTopMargin({ y }: { y: number }): boolean {
+    return y <= this.margin.top;
+  }
+
   private overMargin({ x, y }: { x: number; y: number }): boolean {
     if (x <= this.margin.left) {
       return true;
     }
 
-    if (y <= this.margin.top) {
+    if (x >= this.dimensions.width - this.margin.right) {
       return true;
     }
 
-    if (x >= this.dimensions.width - this.margin.right) {
+    if (this.overTopMargin({ y })) {
       return true;
     }
 
@@ -569,6 +574,20 @@ export class CanvasRenderer<T> implements Renderer {
     mousePosition: { x: number; y: number };
   }): void {
     if (this.lastOps == null) {
+      return;
+    }
+
+    if (this.overMargin(mousePosition)) {
+      if (this.overTopMargin(mousePosition)) {
+        let evt: TimelineZoomEvent = new CustomEvent("timeline-zoom-time", {
+          detail: {
+            direction: (changeAmount > 0 ? "IN" : "OUT") as "IN" | "OUT"
+          }
+        });
+
+        window.dispatchEvent(evt);
+      }
+
       return;
     }
 

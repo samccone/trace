@@ -4,7 +4,7 @@ import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
 import { TimelineEvent, TimelineEventInteraction } from "../lib/format";
-import { d } from "../data/workplan";
+import { d } from "../data/data4";
 // If your data has a custom datum you can pass it here.
 type Datum = never;
 
@@ -14,8 +14,8 @@ const panelWidth = 400;
 
 const renderer = new CanvasRenderer<Datum>(
   {
-    width: 500, //window.innerWidth,
-    height: 500, // window.innerHeight,
+    width: 600,
+    height: 1000,
     margin: {
       right: 200, //panelWidth,
       top: 100,
@@ -98,10 +98,10 @@ datum: ${JSON.stringify(m.datum || "N/A", null, 2)}
   `;
 });
 
-// document.body.appendChild(elm);
+document.body.querySelector("#root")!.appendChild(elm);
 
 window.addEventListener("resize", () => {
-  // timeline.resize({ width: window.innerWidth, height: window.innerHeight });
+  //timeline.resize({ width: window.innerWidth, height: window.innerHeight });
 });
 
 timeline.render();
