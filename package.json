@@ -1,6 +1,6 @@
 {
   "name": "timeline-viz",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "timeline-viz aims to be a pluggable embeddable timeline visualization that focuses on showing 100K+ individual events in a performant way.",
   "repository": {
     "type": "git",
