@@ -81,11 +81,15 @@ export class CanvasRenderer<T> implements Renderer {
     this.ctx = this.canvas.getContext("2d")!;
 
     this.canvas.style.pointerEvents = "none";
-    this.canvas.style.position = "fixed";
+    this.canvas.style.position = "sticky";
     this.canvas.style.left = `${this.margin.left}px`;
     this.canvas.style.top = `${this.margin.top}px`;
 
     this.marginWrapper = document.createElement("div");
+    this.marginWrapper.className = "margin-wrapper";
+    this.marginWrapper.style.position = "sticky";
+    this.marginWrapper.style.top = "0px";
+    this.marginWrapper.style.left = "0px";
     this.axes = document.createElement("div");
     this.axes.style.position = "relative";
     this.axes.style.top = "0px";
@@ -94,7 +98,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.ySummary = document.createElement("canvas");
     this.ySummary.className = "ySummary";
-    this.ySummary.style.position = "fixed";
+    this.ySummary.style.position = "absolute";
     this.ySummary.style.top = `${this.margin.top}px`;
     this.validYBrush = false;
 
@@ -109,7 +113,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.yAxis = document.createElement("canvas");
     this.yAxis.className = "yAxis";
-    this.yAxis.style.position = "fixed";
+    this.yAxis.style.position = "absolute";
     this.yAxis.style.top = `${this.margin.top}px`;
     this.yAxis.style.left = `${this.margin.left / 2}px`;
 
@@ -121,7 +125,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.xSummary = document.createElement("canvas");
     this.xSummary.className = "xSummary";
-    this.xSummary.style.position = "fixed";
+    this.xSummary.style.position = "absolute";
     this.xSummary.style.left = `${this.margin.left}px`;
     this.validXBrush = false;
 
@@ -136,7 +140,7 @@ export class CanvasRenderer<T> implements Renderer {
 
     this.xAxis = document.createElement("canvas");
     this.xAxis.className = "xAxis";
-    this.xAxis.style.position = "fixed";
+    this.xAxis.style.position = "absolute";
     this.xAxis.style.left = `${this.margin.left}px`;
     this.xAxis.style.top = `${this.margin.top / 2}px`;
     this.xAxis.style.borderBottom = `1px solid black`;
@@ -154,8 +158,8 @@ export class CanvasRenderer<T> implements Renderer {
     this.marginWrapper.appendChild(this.axes);
     this.marginWrapper.appendChild(this.timeline);
     this.timeline.appendChild(this.canvas);
-    this.wrapper.appendChild(this.overflowElm);
     this.wrapper.appendChild(this.canvas);
+    this.wrapper.appendChild(this.overflowElm);
     this.target.appendChild(this.wrapper);
 
     this.wrapper.addEventListener("scroll", () => {
@@ -178,6 +182,7 @@ export class CanvasRenderer<T> implements Renderer {
       this.margin.left -
       this.margin.right}px`;
     this.canvas.style.height = `${dimensions.height - this.margin.top}px`;
+    this.overflowElm.style.marginTop = `-${this.canvas.style.height}`;
 
     this.ySummary.width = this.margin.left / 2;
     this.ySummary.height = dimensions.height - this.margin.top;

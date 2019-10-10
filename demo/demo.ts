@@ -1,4 +1,4 @@
-import theme from '../lib/themes/default';
+import theme from "../lib/themes/default";
 
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
@@ -14,10 +14,10 @@ const panelWidth = 400;
 
 const renderer = new CanvasRenderer<Datum>(
   {
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 500, //window.innerWidth,
+    height: 500, // window.innerHeight,
     margin: {
-      right: panelWidth,
+      right: 200, //panelWidth,
       top: 100,
       left: 100
     }
@@ -84,6 +84,7 @@ detailPanel.classList.add("detail-panel");
 detailPanel.style.left = `calc(100% - ${panelWidth}px)`;
 detailPanel.style.width = `${panelWidth}px`;
 document.body.appendChild(detailPanel);
+document.body.querySelector("#root")!.appendChild(elm);
 
 window.addEventListener("timeline-event-click", (e: Event) => {
   const m = (e as TimelineEventInteraction<Datum>).detail.match;
@@ -97,10 +98,10 @@ datum: ${JSON.stringify(m.datum || "N/A", null, 2)}
   `;
 });
 
-document.body.appendChild(elm);
+// document.body.appendChild(elm);
 
 window.addEventListener("resize", () => {
-  timeline.resize({ width: window.innerWidth, height: window.innerHeight });
+  // timeline.resize({ width: window.innerWidth, height: window.innerHeight });
 });
 
 timeline.render();
