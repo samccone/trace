@@ -26,7 +26,9 @@ export class Timeline<T> {
   private dragging = false;
   private pointerDown = false;
   private shiftDown = false;
+  private pendingMouseWheel = false;
   private draggingRange = false;
+  private eventRegistrationHash: {[eventName: string]: (e: any) => void};
   private pointerDownPosition: {
     x: number;
     y: number;
@@ -44,29 +46,35 @@ export class Timeline<T> {
   private lastRenderOps: RenderInstructions<T> | undefined;
   private xRange: [number, number] = [0, 100];
   constructor(
-    public readonly renderer: Renderer,
-    public readonly data: TimelineEvent<T>[],
-    private readonly opts: {
-      toFill?: (t: { label: string }) => string;
-    } = {}
-  ) {
+      public readonly renderer: Renderer,
+      public readonly data: TimelineEvent<T>[],
+      private readonly opts: {toFill?: (t: {label: string}) => string;} = {}) {
+   this.eventRegistrationHash = {
+      'keydown': (e: any) => this.onKeyDown(e),
+      'keyup': (e: any) => this.onKeyUp(e),
+      "pointermove": (e: any) => this.onPointerMove(e),
+      "pointerdown": (e: any) => this.onPointerDown(e),
+      "pointerup": (e: any) => this.onPointerUp(e),
+      "timeline-zoom-time": (e: Event) =>  this.onZoomTime(e as TimelineZoomEvent),
+      "wheel": (e: WheelEvent) => this.onWheel(e),
+    };
+
     this.setListeners();
   }
 
-  private setListeners() {
-    window.addEventListener("keydown", (e: any) => {
-      this.shiftDown = e.shiftKey;
-      if (this.shiftDown) {
-        this.renderer.range();
-      }
-    });
+  private onKeyDown(e: KeyboardEvent) {
+    this.shiftDown = e.shiftKey;
+    if (this.shiftDown) {
+      this.renderer.range();
+    }
+  }
 
-    window.addEventListener("keyup", (e: any) => {
+  private onKeyUp(e: KeyboardEvent) {
       this.shiftDown = e.shiftKey;
-    });
+  }
 
-    this.renderer.target.addEventListener("pointermove", (e: any) => {
-      const currentPosition = { x: e.layerX, y: e.layerY, target: e.target };
+  private onPointerMove(e: any) {
+  const currentPosition = { x: e.layerX, y: e.layerY, target: e.target as Element };
       this.renderer.mouseMove(currentPosition, { shiftDown: this.shiftDown });
 
       if (this.pointerDown) {
@@ -106,15 +114,15 @@ export class Timeline<T> {
         }
       }
       this.lastMousePosition = currentPosition;
-    });
+  }
 
-    this.renderer.target.addEventListener("pointerdown", (e: any) => {
-      this.pointerDown = true;
-      this.pointerDownPosition = { x: e.layerX, y: e.layerY, target: e.target };
-    });
+  private onPointerDown(e: any) {
+    this.pointerDown = true;
+    this.pointerDownPosition = { x: e.layerX, y: e.layerY, target: e.target as Element };
+  }
 
-    this.renderer.target.addEventListener("pointerup", (_: any) => {
-      if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
+  private onPointerUp(_: PointerEvent) {
+          if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
         this.renderer.click(this.pointerDownPosition, this.shiftDown);
       } else if (this.dragging) {
         this.dragging = false;
@@ -128,43 +136,56 @@ export class Timeline<T> {
 
       this.pointerDown = false;
       this.pointerDownPosition = null;
-    });
+  }
 
-    let pendingScroll = false;
+  private onZoomTime(e: TimelineZoomEvent) {
+    if ((e as TimelineZoomEvent).detail.direction === "OUT") {
+      this.xRange = [this.xRange[0], this.xRange[1] / 1.5];
+    } else {
+      this.xRange = [this.xRange[0], this.xRange[1] * 1.5];
+    }
 
-    window.addEventListener("timeline-zoom-time", (e: Event) => {
-      if ((e as TimelineZoomEvent).detail.direction === "OUT") {
-        this.xRange = [this.xRange[0], this.xRange[1] / 1.5];
-      } else {
-        this.xRange = [this.xRange[0], this.xRange[1] * 1.5];
+    this.render();
+  }
+
+  private onWheel(e: WheelEvent) {
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+
+      if (this.pendingMouseWheel) {
+        return;
       }
 
-      this.render();
-    });
-
-    window.addEventListener(
-      "wheel",
-      (e: WheelEvent) => {
-        if (e.metaKey || e.ctrlKey) {
-          e.preventDefault();
-
-          if (pendingScroll) {
-            return;
-          }
-
-          pendingScroll = true;
-          requestAnimationFrame(() => {
-            if (e.deltaY != null && e.deltaY < 0) {
-              this.renderer.zoomIn(this.lastMousePosition);
-            } else {
-              this.renderer.zoomOut(this.lastMousePosition);
-            }
-            pendingScroll = false;
-          });
+      this.pendingMouseWheel = true;
+      requestAnimationFrame(() => {
+        if (e.deltaY != null && e.deltaY < 0) {
+          this.renderer.zoomIn(this.lastMousePosition);
+        } else {
+          this.renderer.zoomOut(this.lastMousePosition);
         }
-      },
-      { passive: false }
-    );
+        this.pendingMouseWheel = false;
+      });
+    }
+  }
+
+  private setListeners() {
+    window.addEventListener("keydown", this.eventRegistrationHash['keydown']);
+    window.addEventListener("keyup", this.eventRegistrationHash['keyup']);
+    this.renderer.target.addEventListener("pointermove", this.eventRegistrationHash['pointermove']);
+    this.renderer.target.addEventListener("pointerdown", this.eventRegistrationHash['pointerdown']);
+    this.renderer.target.addEventListener("pointerup", this.eventRegistrationHash['pointerup']);
+    window.addEventListener("timeline-zoom-time", this.eventRegistrationHash['timeline-zoom-time']);
+    window.addEventListener("wheel", this.eventRegistrationHash['wheel'], {passive: false});
+  }
+
+  removeListeners() {
+    window.removeEventListener("keydown", this.eventRegistrationHash['keydown']);
+    window.removeEventListener("keyup", this.eventRegistrationHash['keyup']);
+    this.renderer.target.removeEventListener("pointermove", this.eventRegistrationHash['pointermove']);
+    this.renderer.target.removeEventListener("pointerdown", this.eventRegistrationHash['pointerdown']);
+    this.renderer.target.removeEventListener("pointerup", this.eventRegistrationHash['pointerup']);
+    window.removeEventListener("timeline-zoom-time", this.eventRegistrationHash['timeline-zoom-time']);
+    window.removeEventListener("wheel", this.eventRegistrationHash['wheel']);
   }
 
   transformData<T>(data: TimelineEvent<T>[]): RenderInstructions<T> {
