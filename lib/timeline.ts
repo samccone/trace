@@ -45,7 +45,7 @@ export class Timeline<T> {
   private xRange: [number, number] = [0, 100];
   constructor(
     public readonly renderer: Renderer,
-    public readonly data: TimelineEvent[],
+    public readonly data: TimelineEvent<T>[],
     private readonly opts: {
       toFill?: (t: { label: string }) => string;
     } = {}
