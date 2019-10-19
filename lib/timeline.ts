@@ -334,9 +334,9 @@ export class Timeline<T> {
       const totalForRow = rowMap[d].reduce((p, c) => p + (c.duration || 0), 0);
       rowMap[d] = rowMap[d].sort((a, b) => a.start - b.start);
       return {
-        index: parseInt(d),
+        index: Number(d),
         pct: totalForRow / totalDuration,
-        y: yScale(parseInt(d)),
+        y: yScale(Number(d)),
         height: BANDHEIGHT,
         text: rows[i]
       };
