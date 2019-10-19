@@ -5,7 +5,8 @@ import {
   RenderOp,
   RowMap,
   InternalTimelineEvent,
-  TimelineZoomEvent
+  TimelineZoomEvent,
+  SummaryEvent
 } from "./format";
 import { scaleLinear } from "d3";
 import { uuid } from "./uuid";
@@ -344,7 +345,8 @@ export class Timeline<T> {
     const BUCKETS = 200;
     const increment = totalDuration / BUCKETS;
 
-    const xSummary = [...new Array(BUCKETS)].map((_, bucket) => {
+    const xSummary: SummaryEvent[] = [];
+    for (let bucket = 0; bucket < BUCKETS; bucket++) {
       let totalForColumn = 0;
 
       Object.keys(rowMap).forEach(row => {
@@ -362,14 +364,14 @@ export class Timeline<T> {
       });
 
       const totalX = rows.length;
-      return {
+      xSummary.push({
         index: bucket,
         pct: totalForColumn / totalX,
         x: xScale((xMin || 0) + increment * bucket),
         width: xScale((xMin || 0) + increment),
         text: formatDate(new Date((xMin || 0) + increment * bucket))
-      };
-    });
+      });
+    }
 
     return {
       opts,
