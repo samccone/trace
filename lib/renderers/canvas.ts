@@ -60,7 +60,7 @@ export class CanvasRenderer<T> implements Renderer {
     public dimensions: {
       width: number;
       height: number;
-      margin?: { top: number; left: number; right: number };
+      margin?: { top: number; left: number; right: number; bottom: number };
     },
     public readonly theme: Theme,
     public readonly target: HTMLElement
@@ -367,7 +367,11 @@ export class CanvasRenderer<T> implements Renderer {
     this.xAxisCtx.clearRect(0, 0, this.xAxis.width, this.xAxis.height);
   }
 
-  private writeText(ctx, opts, height) {
+  private writeText(
+    ctx: CanvasRenderingContext2D,
+    opts: [string, number, number],
+    height: number
+  ) {
     if (height === null || height * this.zoomLevel > 8) {
       ctx.fillText(...opts);
     }
@@ -499,7 +503,7 @@ export class CanvasRenderer<T> implements Renderer {
     const yAxisBarHeight =
       instructions.ySummary &&
       instructions.ySummary[0] &&
-      instructions.ySummary[0].height * this.scale();
+      instructions.ySummary[0].height! * this.scale();
 
     const yAxisLabelMod = Math.round(Math.max(1, 15 / yAxisBarHeight));
 
@@ -549,7 +553,7 @@ export class CanvasRenderer<T> implements Renderer {
     const xAxisBarWidth =
       instructions.xSummary &&
       instructions.xSummary[0] &&
-      instructions.xSummary[0].width * this.scale();
+      instructions.xSummary[0].width! * this.scale();
 
     const xAxisLabelMod = Math.round(Math.max(1, 80 / xAxisBarWidth));
 

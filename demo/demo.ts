@@ -19,7 +19,8 @@ const renderer = new CanvasRenderer<Datum>(
     margin: {
       right: 200, //panelWidth,
       top: 100,
-      left: 100
+      left: 100,
+      bottom: 0
     }
   },
   theme,
