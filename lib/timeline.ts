@@ -28,7 +28,7 @@ export class Timeline<T> {
   private shiftDown = false;
   private pendingMouseWheel = false;
   private draggingRange = false;
-  private eventRegistrationHash: {[eventName: string]: (e: any) => void};
+  private eventRegistrationHash: { [eventName: string]: (e: any) => void };
   private pointerDownPosition: {
     x: number;
     y: number;
@@ -44,21 +44,36 @@ export class Timeline<T> {
     y: 0
   };
   private lastRenderOps: RenderInstructions<T> | undefined;
-  private xRange: [number, number] = [0, 100];
+  private xRange: [number, number];
+  private yRange: [number, number];
   constructor(
-      public readonly renderer: Renderer,
-      public readonly data: TimelineEvent<T>[],
-      private readonly opts: {toFill?: (t: {label: string}) => string;} = {}) {
-   this.eventRegistrationHash = {
-      'keydown': (e: any) => this.onKeyDown(e),
-      'keyup': (e: any) => this.onKeyUp(e),
-      "pointermove": (e: any) => this.onPointerMove(e),
-      "pointerdown": (e: any) => this.onPointerDown(e),
-      "pointerup": (e: any) => this.onPointerUp(e),
-      "timeline-zoom-time": (e: Event) =>  this.onZoomTime(e as TimelineZoomEvent),
-      "wheel": (e: WheelEvent) => this.onWheel(e),
+    public readonly renderer: Renderer,
+    public readonly data: TimelineEvent<T>[],
+    private readonly opts: { toFill?: (t: { label: string }) => string } = {}
+  ) {
+    this.eventRegistrationHash = {
+      keydown: (e: any) => this.onKeyDown(e),
+      keyup: (e: any) => this.onKeyUp(e),
+      pointermove: (e: any) => this.onPointerMove(e),
+      pointerdown: (e: any) => this.onPointerDown(e),
+      pointerup: (e: any) => this.onPointerUp(e),
+      "timeline-zoom-time": (e: Event) =>
+        this.onZoomTime(e as TimelineZoomEvent),
+      wheel: (e: WheelEvent) => this.onWheel(e)
     };
+    this.xRange = [
+      0,
+      renderer.dimensions.width -
+        ((renderer.dimensions.margin && renderer.dimensions.margin.left) || 0) -
+        ((renderer.dimensions.margin && renderer.dimensions.margin.right) || 0)
+    ];
 
+    this.yRange = [
+      0,
+      renderer.dimensions.height -
+        ((renderer.dimensions.margin && renderer.dimensions.margin.top) || 0) -
+        ((renderer.dimensions.margin && renderer.dimensions.margin.bottom) || 0)
+    ];
     this.setListeners();
   }
 
@@ -70,72 +85,80 @@ export class Timeline<T> {
   }
 
   private onKeyUp(e: KeyboardEvent) {
-      this.shiftDown = e.shiftKey;
+    this.shiftDown = e.shiftKey;
   }
 
   private onPointerMove(e: any) {
-  const currentPosition = { x: e.layerX, y: e.layerY, target: e.target as Element };
-      this.renderer.mouseMove(currentPosition, { shiftDown: this.shiftDown });
+    const currentPosition = {
+      x: e.layerX,
+      y: e.layerY,
+      target: e.target as Element
+    };
+    this.renderer.mouseMove(currentPosition, { shiftDown: this.shiftDown });
 
-      if (this.pointerDown) {
-        if (!this.dragging && !this.draggingRange) {
-          if (this.shiftDown) {
-            this.renderer.startRange(this.pointerDownPosition);
-            this.draggingRange = true;
-          } else {
-            this.renderer.startDragging(this.pointerDownPosition);
-            this.dragging = true;
-          }
-
-          this.startDraggingPosition = this.pointerDownPosition;
-        }
-
-        if (this.lastMousePosition == null) {
-          this.lastMousePosition = { x: e.layerX, y: e.layerY };
-        } else {
-          const dx = this.lastMousePosition.x - e.layerX;
-          const dy = this.lastMousePosition.y - e.layerY;
-
-          if (this.draggingRange) {
-            this.renderer.dragRange(
-              { ...currentPosition, dx, dy },
-              this.startDraggingPosition
-            );
-          } else {
-            this.renderer.drag(
-              { ...currentPosition, dx, dy },
-              this.startDraggingPosition
-            );
-          }
-        }
-      } else {
+    if (this.pointerDown) {
+      if (!this.dragging && !this.draggingRange) {
         if (this.shiftDown) {
-          this.renderer.range();
+          this.renderer.startRange(this.pointerDownPosition);
+          this.draggingRange = true;
+        } else {
+          this.renderer.startDragging(this.pointerDownPosition);
+          this.dragging = true;
+        }
+
+        this.startDraggingPosition = this.pointerDownPosition;
+      }
+
+      if (this.lastMousePosition == null) {
+        this.lastMousePosition = { x: e.layerX, y: e.layerY };
+      } else {
+        const dx = this.lastMousePosition.x - e.layerX;
+        const dy = this.lastMousePosition.y - e.layerY;
+
+        if (this.draggingRange) {
+          this.renderer.dragRange(
+            { ...currentPosition, dx, dy },
+            this.startDraggingPosition
+          );
+        } else {
+          this.renderer.drag(
+            { ...currentPosition, dx, dy },
+            this.startDraggingPosition
+          );
         }
       }
-      this.lastMousePosition = currentPosition;
+    } else {
+      if (this.shiftDown) {
+        this.renderer.range();
+      }
+    }
+    this.lastMousePosition = currentPosition;
   }
 
   private onPointerDown(e: any) {
     this.pointerDown = true;
-    this.pointerDownPosition = { x: e.layerX, y: e.layerY, target: e.target as Element };
+    this.pointerDownPosition = {
+      x: e.layerX,
+      y: e.layerY,
+      target: e.target as Element
+    };
   }
 
   private onPointerUp(_: PointerEvent) {
-          if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
-        this.renderer.click(this.pointerDownPosition, this.shiftDown);
-      } else if (this.dragging) {
-        this.dragging = false;
-        this.renderer.stopDragging();
-        this.startDraggingPosition = null;
-      } else if (this.draggingRange) {
-        this.draggingRange = false;
-        this.renderer.stopRange();
-        this.startDraggingPosition = null;
-      }
+    if (!this.draggingRange && !this.dragging && this.pointerDownPosition) {
+      this.renderer.click(this.pointerDownPosition, this.shiftDown);
+    } else if (this.dragging) {
+      this.dragging = false;
+      this.renderer.stopDragging();
+      this.startDraggingPosition = null;
+    } else if (this.draggingRange) {
+      this.draggingRange = false;
+      this.renderer.stopRange();
+      this.startDraggingPosition = null;
+    }
 
-      this.pointerDown = false;
-      this.pointerDownPosition = null;
+    this.pointerDown = false;
+    this.pointerDownPosition = null;
   }
 
   private onZoomTime(e: TimelineZoomEvent) {
@@ -169,23 +192,52 @@ export class Timeline<T> {
   }
 
   private setListeners() {
-    window.addEventListener("keydown", this.eventRegistrationHash['keydown']);
-    window.addEventListener("keyup", this.eventRegistrationHash['keyup']);
-    this.renderer.target.addEventListener("pointermove", this.eventRegistrationHash['pointermove']);
-    this.renderer.target.addEventListener("pointerdown", this.eventRegistrationHash['pointerdown']);
-    this.renderer.target.addEventListener("pointerup", this.eventRegistrationHash['pointerup']);
-    window.addEventListener("timeline-zoom-time", this.eventRegistrationHash['timeline-zoom-time']);
-    window.addEventListener("wheel", this.eventRegistrationHash['wheel'], {passive: false});
+    window.addEventListener("keydown", this.eventRegistrationHash["keydown"]);
+    window.addEventListener("keyup", this.eventRegistrationHash["keyup"]);
+    this.renderer.target.addEventListener(
+      "pointermove",
+      this.eventRegistrationHash["pointermove"]
+    );
+    this.renderer.target.addEventListener(
+      "pointerdown",
+      this.eventRegistrationHash["pointerdown"]
+    );
+    this.renderer.target.addEventListener(
+      "pointerup",
+      this.eventRegistrationHash["pointerup"]
+    );
+    window.addEventListener(
+      "timeline-zoom-time",
+      this.eventRegistrationHash["timeline-zoom-time"]
+    );
+    window.addEventListener("wheel", this.eventRegistrationHash["wheel"], {
+      passive: false
+    });
   }
 
   removeListeners() {
-    window.removeEventListener("keydown", this.eventRegistrationHash['keydown']);
-    window.removeEventListener("keyup", this.eventRegistrationHash['keyup']);
-    this.renderer.target.removeEventListener("pointermove", this.eventRegistrationHash['pointermove']);
-    this.renderer.target.removeEventListener("pointerdown", this.eventRegistrationHash['pointerdown']);
-    this.renderer.target.removeEventListener("pointerup", this.eventRegistrationHash['pointerup']);
-    window.removeEventListener("timeline-zoom-time", this.eventRegistrationHash['timeline-zoom-time']);
-    window.removeEventListener("wheel", this.eventRegistrationHash['wheel']);
+    window.removeEventListener(
+      "keydown",
+      this.eventRegistrationHash["keydown"]
+    );
+    window.removeEventListener("keyup", this.eventRegistrationHash["keyup"]);
+    this.renderer.target.removeEventListener(
+      "pointermove",
+      this.eventRegistrationHash["pointermove"]
+    );
+    this.renderer.target.removeEventListener(
+      "pointerdown",
+      this.eventRegistrationHash["pointerdown"]
+    );
+    this.renderer.target.removeEventListener(
+      "pointerup",
+      this.eventRegistrationHash["pointerup"]
+    );
+    window.removeEventListener(
+      "timeline-zoom-time",
+      this.eventRegistrationHash["timeline-zoom-time"]
+    );
+    window.removeEventListener("wheel", this.eventRegistrationHash["wheel"]);
   }
 
   transformData<T>(data: TimelineEvent<T>[]): RenderInstructions<T> {
@@ -232,25 +284,19 @@ export class Timeline<T> {
       }
     );
 
-    const sortedData = internalData.sort((a, b) => {
-      return a.end - a.start - (b.end - b.start);
-    });
-
-    const medianIndex = Math.floor(sortedData.length / 2);
-    const median = sortedData[medianIndex];
-
-    const xUnit = scaleLinear()
-      .domain([xMin || 0, (xMin || 0) + (median.end - median.start)])
+    const xScale = scaleLinear()
+      .domain([xMin || 0, xMax || 0])
       .range(this.xRange);
 
-    const PADDING = 0.2;
-    const BANDHEIGHT = 20;
+    const yScale = scaleLinear()
+      .domain([0, rows.length])
+      .range(this.yRange);
 
-    const yUnit = scaleLinear().range([0, BANDHEIGHT * (1 + PADDING)]);
+    const BANDHEIGHT = yScale(1);
 
     const opts = internalData.reduce(
       (p, d) => {
-        const width = xUnit(d.end) - xUnit(d.start);
+        const width = xScale(d.end) - xScale(d.start);
 
         if (width < 0) {
           console.warn(`Start ${d.start} is after End ${d.end}`);
@@ -260,8 +306,8 @@ export class Timeline<T> {
         let fillColor = this.opts.toFill ? this.opts.toFill(d) : "#ccc";
 
         const value = {
-          x: xUnit(d.start),
-          y: yUnit(d.row || 0),
+          x: xScale(d.start),
+          y: yScale(d.row || 0),
           width,
           uuid: d.uuid!,
           height: BANDHEIGHT,
@@ -289,7 +335,7 @@ export class Timeline<T> {
       return {
         index: parseInt(d),
         pct: totalForRow / totalDuration,
-        y: yUnit(parseInt(d)),
+        y: yScale(parseInt(d)),
         height: BANDHEIGHT,
         text: rows[i]
       };
@@ -319,18 +365,18 @@ export class Timeline<T> {
       return {
         index: bucket,
         pct: totalForColumn / totalX,
-        x: xUnit((xMin || 0) + increment * bucket),
-        width: xUnit((xMin || 0) + increment),
+        x: xScale((xMin || 0) + increment * bucket),
+        width: xScale((xMin || 0) + increment),
         text: formatDate(new Date((xMin || 0) + increment * bucket))
       };
     });
 
     return {
       opts,
-      xMax: xUnit(xMax || 0),
-      yMax: yUnit(rows.length),
-      xUnit,
-      yUnit,
+      xMax: xScale(xMax || 0),
+      xScale,
+      yMax: yScale(rows.length),
+      yScale,
       xSummary,
       ySummary,
       rowMap

@@ -11,8 +11,8 @@ import { binarySearch } from "../search";
 import { Theme } from "../format";
 import { toRGB } from "../hex";
 
-const ZOOM_AMOUNT = 0.1;
-const MIN_ZOOM = 0.1;
+const ZOOM_AMOUNT = 0.2;
+const MIN_ZOOM = 1;
 
 export class CanvasRenderer<T> implements Renderer {
   private canvas: HTMLCanvasElement;
@@ -367,6 +367,12 @@ export class CanvasRenderer<T> implements Renderer {
     this.xAxisCtx.clearRect(0, 0, this.xAxis.width, this.xAxis.height);
   }
 
+  private writeText(ctx, opts, height) {
+    if (height === null || height * this.zoomLevel > 8) {
+      ctx.fillText(...opts);
+    }
+  }
+
   private internalRender(instructions: RenderInstructions<T>) {
     this.lastOps = instructions;
     this.clearAll();
@@ -380,12 +386,13 @@ export class CanvasRenderer<T> implements Renderer {
 
     const transformScrollX = this.scrollOffset.x / this.scale();
     const transformScrollY = this.scrollOffset.y / this.scale();
-    const fontSize = parseInt(this.ctx.font);
+    const fontSize = Math.max(10 / this.zoomLevel, this.lastOps.yScale(1) / 3);
 
     const rowRenderBounds = this.visibleRows(instructions);
-
+    this.ctx.font = `normal normal ${fontSize}px Barlow`;
+    const xTextOffset = 4 / this.zoomLevel;
     for (const opt of instructions.opts) {
-      const currentRow = this.toRow(instructions.yUnit, opt.y * this.scale());
+      const currentRow = this.toRow(instructions.yScale, opt.y * this.scale());
       if (
         currentRow < rowRenderBounds.min ||
         currentRow > rowRenderBounds.max
@@ -420,12 +427,19 @@ export class CanvasRenderer<T> implements Renderer {
           this.ctx.fillStyle = "#D0CFE2";
         }
 
-        this.ctx.fillText(
-          opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
-          opt.x + (opt.text.offsetX || 0) - transformScrollX + 4,
-          opt.y +
-            (opt.text.offsetY || opt.height / 2 - fontSize / 2) -
-            transformScrollY
+        this.writeText(
+          this.ctx,
+          [
+            opt.text.text.slice(0, Math.floor(opt.width / fontSize) + 3),
+            opt.x +
+              ((opt.text.offsetX && opt.text.offsetX / this.zoomLevel) || 0) -
+              transformScrollX +
+              xTextOffset,
+            opt.y +
+              (opt.text.offsetY || opt.height / 2 - fontSize / 2) -
+              transformScrollY
+          ],
+          this.lastOps.yScale(1)
         );
       }
     }
@@ -460,24 +474,36 @@ export class CanvasRenderer<T> implements Renderer {
       this.ctx.fillRect(...selectedRect);
       this.ctx.strokeRect(...selectedRect);
       this.ctx.fillStyle = "black";
+      this.ctx.textAlign = "center";
+      this.ctx.lineWidth = 2 / this.zoomLevel;
+      this.ctx.font = `normal normal ${14 / this.zoomLevel}px Barlow`;
+
       this.selectedRange.end &&
         this.ctx.fillText(
           Math.abs(
             Math.round(
-              this.lastOps.xUnit.invert(this.selectedRange.end.x) -
-                this.lastOps.xUnit.invert(this.selectedRange.start.x)
+              this.lastOps.xScale.invert(this.selectedRange.end.x) -
+                this.lastOps.xScale.invert(this.selectedRange.start.x)
             )
           ) + " ms",
           selectedRect[0] + selectedRect[2] / 2,
-          selectedRect[1] - 15
+          selectedRect[1] - 15 / this.zoomLevel
         );
+      this.ctx.textAlign = "left";
     }
 
     this.ySummaryY.domain([0, instructions.ySummary.length]);
 
     this.ySummaryCtx.fillStyle = "#575679";
 
-    for (const yS of instructions.ySummary) {
+    const yAxisBarHeight =
+      instructions.ySummary &&
+      instructions.ySummary[0] &&
+      instructions.ySummary[0].height * this.scale();
+
+    const yAxisLabelMod = Math.round(Math.max(1, 15 / yAxisBarHeight));
+
+    for (const [i, yS] of instructions.ySummary.entries()) {
       this.ySummaryCtx.fillRect(
         this.ySummaryX(yS.pct),
         this.ySummaryY(yS.index),
@@ -491,12 +517,13 @@ export class CanvasRenderer<T> implements Renderer {
           this.ySummaryX(yS.pct),
           (yS.y - transformScrollY) * this.scale(),
           this.ySummaryX(0) - this.ySummaryX(yS.pct),
-          yS.height * this.scale()
+          yAxisBarHeight
         );
 
         this.yAxisCtx.fillStyle = "#575679";
 
         yS.text &&
+          i % yAxisLabelMod === 0 &&
           this.yAxisCtx.fillText(
             yS.text.slice(0, Math.floor(this.yAxis.width / fontSize) + 3),
             4,
@@ -518,6 +545,14 @@ export class CanvasRenderer<T> implements Renderer {
     this.xSummaryX.domain([0, instructions.xSummary.length]);
 
     this.xSummaryCtx.fillStyle = "#575679";
+
+    const xAxisBarWidth =
+      instructions.xSummary &&
+      instructions.xSummary[0] &&
+      instructions.xSummary[0].width * this.scale();
+
+    const xAxisLabelMod = Math.round(Math.max(1, 80 / xAxisBarWidth));
+
     const textDraws: Array<[string, number, number]> = [];
     for (const [i, xS] of instructions.xSummary.entries()) {
       this.xSummaryCtx.fillRect(
@@ -538,7 +573,7 @@ export class CanvasRenderer<T> implements Renderer {
         );
         this.xAxisCtx.fillStyle = "#575679";
 
-        if (xS.text && i % 3 === 0) {
+        if (xS.text && i % xAxisLabelMod === 0) {
           textDraws.push([
             xS.text,
             (xS.x - transformScrollX) * this.scale() + 4,
@@ -598,10 +633,9 @@ export class CanvasRenderer<T> implements Renderer {
     const timelineXPercent = x / this.timelineWidth();
     const timelineYPercent = y / this.timelineHeight();
 
-    const originalZoomLevel = this.zoomLevel;
-    this.zoomLevel += changeAmount;
-    if (this.scale() <= MIN_ZOOM || this.scale() <= MIN_ZOOM) {
-      this.zoomLevel = originalZoomLevel;
+    this.zoomLevel += changeAmount + changeAmount * this.zoomLevel;
+    if (this.scale() <= MIN_ZOOM) {
+      this.zoomLevel = 1;
       return;
     }
 
@@ -755,14 +789,14 @@ export class CanvasRenderer<T> implements Renderer {
 
     const { x, y } = this.toTimelinePosition(mousePosition);
 
-    const row = this.toRow(this.lastOps.yUnit, y);
-    const timestamp = this.lastOps.xUnit.invert(x / this.scale());
+    const row = this.toRow(this.lastOps.yScale, y);
+    const timestamp = this.lastOps.xScale.invert(x / this.scale());
 
     return binarySearch(timestamp, this.lastOps.rowMap[row]!);
   }
 
-  private toRow(yUnit: ScaleLinear<number, number>, y: number): number {
-    return Math.floor(yUnit.invert(y / this.scale()));
+  private toRow(yScale: ScaleLinear<number, number>, y: number): number {
+    return Math.floor(yScale.invert(y / this.scale()));
   }
 
   private visibleRows(
@@ -770,10 +804,10 @@ export class CanvasRenderer<T> implements Renderer {
   ): { min: number; max: number } {
     return {
       min: Math.floor(
-        renderInstructions.yUnit.invert(this.scrollOffset.y / this.scale())
+        renderInstructions.yScale.invert(this.scrollOffset.y / this.scale())
       ),
       max: Math.floor(
-        renderInstructions.yUnit.invert(
+        renderInstructions.yScale.invert(
           (this.scrollOffset.y + this.dimensions.height) / this.scale()
         )
       )

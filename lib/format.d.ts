@@ -37,8 +37,8 @@ export interface RenderInstructions<T> {
   opts: RenderOp[];
   xMax: number;
   yMax: number;
-  xUnit: ScaleLinear<number, number>;
-  yUnit: ScaleLinear<number, number>;
+  xScale: ScaleLinear<number, number>;
+  yScale: ScaleLinear<number, number>;
   ySummary: SummaryEvent[];
   xSummary: SummaryEvent[];
   rowMap: RowMap<T>;

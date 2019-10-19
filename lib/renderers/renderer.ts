@@ -2,7 +2,12 @@ import { RenderOp, Theme } from "../format";
 
 export abstract class Renderer {
   constructor(
-    public readonly dimensions: { width: number; height: number },
+    public readonly dimensions: {
+      width: number;
+      height: number;
+      margin?: { top: number; left: number; right: number; bottom: number };
+    },
+
     public readonly theme: Theme,
     public readonly target: Element
   ) {}
