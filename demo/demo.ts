@@ -3,7 +3,7 @@ import theme from "../lib/themes/default";
 import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
-import { TimelineEvent, TimelineEventInteraction } from "../lib/format";
+import { TimelineEventInteraction } from "../lib/format";
 // If your data has a custom datum you can pass it here.
 type Datum = never;
 

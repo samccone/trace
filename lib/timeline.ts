@@ -53,8 +53,8 @@ export class Timeline<T> {
     private readonly opts: { toFill?: (t: { label: string }) => string } = {}
   ) {
     this.eventRegistrationHash = {
-      keydown: (e: Event) => this.onKeyDown(e),
-      keyup: (e: Event) => this.onKeyUp(e),
+      keydown: (e: KeyboardEvent) => this.onKeyDown(e),
+      keyup: (e: KeyboardEvent) => this.onKeyUp(e),
       pointermove: (e: Event) => this.onPointerMove(e),
       pointerdown: (e: Event) => this.onPointerDown(e),
       pointerup: (e: any) => this.onPointerUp(e),
@@ -293,10 +293,10 @@ export class Timeline<T> {
       .domain([0, rows.length])
       .range(this.yRange);
 
-    const BANDHEIGHT = yScale(1);
+    const BANDHEIGHT = yScale(1) ?? 1;
 
     const opts = internalData.reduce((p, d) => {
-      const width = xScale(d.end) - xScale(d.start);
+      const width = (xScale(d.end) ?? 0) - (xScale(d.start) ?? 0);
 
       if (width < 0) {
         console.warn(`Start ${d.start} is after End ${d.end}`);
@@ -306,8 +306,8 @@ export class Timeline<T> {
       let fillColor = this.opts.toFill ? this.opts.toFill(d) : "#ccc";
 
       const value = {
-        x: xScale(d.start),
-        y: yScale(d.row || 0),
+        x: xScale(d.start) ?? 0,
+        y: yScale(d.row || 0) ?? 0,
         width,
         uuid: d.uuid!,
         height: BANDHEIGHT,
@@ -372,9 +372,9 @@ export class Timeline<T> {
 
     return {
       opts,
-      xMax: xScale(xMax || 0),
+      xMax: xScale(xMax || 0) ?? 0,
       xScale,
-      yMax: yScale(rows.length),
+      yMax: yScale(rows.length) ?? 0,
       yScale,
       xSummary,
       ySummary,
