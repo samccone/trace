@@ -53,10 +53,10 @@ export class Timeline<T> {
     private readonly opts: { toFill?: (t: { label: string }) => string } = {}
   ) {
     this.eventRegistrationHash = {
-      keydown: (e: any) => this.onKeyDown(e),
-      keyup: (e: any) => this.onKeyUp(e),
-      pointermove: (e: any) => this.onPointerMove(e),
-      pointerdown: (e: any) => this.onPointerDown(e),
+      keydown: (e: Event) => this.onKeyDown(e),
+      keyup: (e: Event) => this.onKeyUp(e),
+      pointermove: (e: Event) => this.onPointerMove(e),
+      pointerdown: (e: Event) => this.onPointerDown(e),
       pointerup: (e: any) => this.onPointerUp(e),
       "timeline-zoom-time": (e: Event) =>
         this.onZoomTime(e as TimelineZoomEvent),
@@ -295,38 +295,35 @@ export class Timeline<T> {
 
     const BANDHEIGHT = yScale(1);
 
-    const opts = internalData.reduce(
-      (p, d) => {
-        const width = xScale(d.end) - xScale(d.start);
+    const opts = internalData.reduce((p, d) => {
+      const width = xScale(d.end) - xScale(d.start);
 
-        if (width < 0) {
-          console.warn(`Start ${d.start} is after End ${d.end}`);
-          return p;
-        }
-
-        let fillColor = this.opts.toFill ? this.opts.toFill(d) : "#ccc";
-
-        const value = {
-          x: xScale(d.start),
-          y: yScale(d.row || 0),
-          width,
-          uuid: d.uuid!,
-          height: BANDHEIGHT,
-          fill: fillColor,
-          text: {
-            offsetX: 0,
-            offsetY: 0,
-            fill: "black",
-            text: d.label
-          }
-        };
-
-        p.push(value);
-
+      if (width < 0) {
+        console.warn(`Start ${d.start} is after End ${d.end}`);
         return p;
-      },
-      [] as RenderOp[]
-    );
+      }
+
+      let fillColor = this.opts.toFill ? this.opts.toFill(d) : "#ccc";
+
+      const value = {
+        x: xScale(d.start),
+        y: yScale(d.row || 0),
+        width,
+        uuid: d.uuid!,
+        height: BANDHEIGHT,
+        fill: fillColor,
+        text: {
+          offsetX: 0,
+          offsetY: 0,
+          fill: "black",
+          text: d.label
+        }
+      };
+
+      p.push(value);
+
+      return p;
+    }, [] as RenderOp[]);
 
     const totalDuration = (xMax || 0) - (xMin || 0);
 
