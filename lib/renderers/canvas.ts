@@ -103,9 +103,6 @@ export class CanvasRenderer<T> implements Renderer {
     this.ySummary.style.top = `${this.margin.top}px`;
     this.validYBrush = false;
 
-    // this.ySummary.style.border = `1px solid #cccccc`;
-    // this.ySummary.style.borderRight = `1px solid black`;
-
     this.ySummaryCtx = this.ySummary.getContext("2d")!;
     this.ySummaryY = scaleLinear();
     this.ySummaryX = scaleLinear().domain([1, 0]);
@@ -118,8 +115,6 @@ export class CanvasRenderer<T> implements Renderer {
     this.yAxis.style.top = `${this.margin.top}px`;
     this.yAxis.style.left = `${this.margin.left / 2}px`;
 
-    // this.yAxis.style.borderRight = `1px solid black`;
-
     this.yAxisCtx = this.yAxis.getContext("2d")!;
 
     this.axes.appendChild(this.yAxis);
@@ -129,9 +124,6 @@ export class CanvasRenderer<T> implements Renderer {
     this.xSummary.style.position = "absolute";
     this.xSummary.style.left = `${this.margin.left}px`;
     this.validXBrush = false;
-
-    // this.xSummary.style.border = `1px solid #cccccc`;
-    // this.xSummary.style.borderBottom = `1px solid black`;
 
     this.xSummaryCtx = this.xSummary.getContext("2d")!;
     this.xSummaryY = scaleLinear().domain([1, 0]);
