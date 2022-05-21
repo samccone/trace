@@ -4,7 +4,6 @@ import { CanvasRenderer } from "../lib/renderers/canvas";
 import { Timeline } from "../lib/timeline";
 import { Tooltip } from "../lib/tooltip";
 import { TimelineEvent, TimelineEventInteraction } from "../lib/format";
-import { d } from "../data/data4";
 // If your data has a custom datum you can pass it here.
 type Datum = never;
 
@@ -14,10 +13,10 @@ const panelWidth = 400;
 
 const renderer = new CanvasRenderer<Datum>(
   {
-    width: 600,
-    height: 1000,
+    width: 400,
+    height: 400,
     margin: {
-      right: 200, //panelWidth,
+      right: 100,
       top: 100,
       left: 100,
       bottom: 0
@@ -46,37 +45,47 @@ const colors = [
   "#116b64"
 ];
 
-const timeline = new Timeline<Datum>(
-  renderer,
-  (d as TimelineEvent<Datum>[]).map((v: TimelineEvent<Datum>) => {
-    v.label = v.label.replace(`['/bin/bash', '-c', '`, "");
-    return v;
-  }),
-  {
-    toFill: ({ label }: { label: string }) => {
-      if (label.indexOf("git remote -v") != -1) {
-        return colors[0];
-      }
+function buildDemoData() {
+  let ret = [];
 
-      if (label.indexOf("git log") != -1) {
-        return colors[1];
-      }
-
-      if (label.indexOf("git config") != -1) {
-        return colors[2];
-      }
-
-      if (label.indexOf("git clean") != -1) {
-        return colors[3];
-      }
-
-      if (label.indexOf("git status") != -1) {
-        return colors[4];
-      }
-      return colors[5];
+  for (let i = 0; i < 1000; i++) {
+    for (let j = 0; j < 100; j++) {
+      ret.push({
+        start: i,
+        end: i + 1,
+        label: `${i}`,
+        rowId: `${j}`
+      });
     }
   }
-);
+
+  return ret;
+}
+
+const timeline = new Timeline<Datum>(renderer, buildDemoData(), {
+  toFill: ({ label }: { label: string }) => {
+    if (label.indexOf("1") != -1) {
+      return colors[0];
+    }
+
+    if (label.indexOf("4") != -1) {
+      return colors[1];
+    }
+
+    if (label.indexOf("8") != -1) {
+      return colors[2];
+    }
+
+    if (label.indexOf("9") != -1) {
+      return colors[3];
+    }
+
+    if (label.indexOf("6") != -1) {
+      return colors[4];
+    }
+    return colors[5];
+  }
+});
 
 new Tooltip<Datum>(renderer.target);
 
@@ -100,9 +109,5 @@ datum: ${JSON.stringify(m.datum || "N/A", null, 2)}
 });
 
 document.body.querySelector("#root")!.appendChild(elm);
-
-window.addEventListener("resize", () => {
-  //timeline.resize({ width: window.innerWidth, height: window.innerHeight });
-});
 
 timeline.render();
